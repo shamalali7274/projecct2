@@ -208,6 +208,7 @@ import '../../../../core/widgets/islamic_hero_illustration.dart';
 import '../../../students/presentation/pages/students_list_page.dart';
 import '../../../student_detail/presentation/pages/student_detail_page.dart';
 import '../../../recitation/presentation/start_recitation.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 import '../../domain/entities/student_entity.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
@@ -251,9 +252,17 @@ class _DashboardViewState extends State<_DashboardView> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentsListPage()));
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+  }
+
   void _handleNavTap(int index) {
     if (index == 1) {
       _openStudentsList();
+      return;
+    }
+    if (index == 3) {
+      _openSettings();
       return;
     }
     setState(() => _navIndex = index);

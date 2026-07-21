@@ -41,6 +41,7 @@
 // }
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../domain/entities/user_role.dart';
@@ -63,10 +64,21 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthAuthenticated(UserRoleX.fromStored(storedRole), ''));
   }
 
+  /// يستدعي AuthController@logout بالباك ايند (POST /api/logout) اللي
+  /// بيحذف التوكن الحالي من جدول personal_access_tokens، وبعدين يمسح
+  /// الجلسة محلياً بغض النظر عن نتيجة الطلب (حتى لو التوكن كان منتهي
+  /// أصلاً أو ما في اتصال، لازم تنسجل الأنسة خروج محلياً).
   Future<void> logout() async {
-    await SecureStorage.clearAll();
-    ApiClient.instance.clearToken();
-    emit(const AuthUnauthenticated());
+    try {
+      await ApiClient.instance.post(AppConfig.logoutPath);
+    } catch (_) {
+      // تجاهل أي خطأ شبكة/سيرفر هون: تسجيل الخروج المحلي لازم يصير
+      // دايماً، حتى لو فشل استدعاء الباك ايند.
+    } finally {
+      await SecureStorage.clearAll();
+      ApiClient.instance.clearToken();
+      emit(const AuthUnauthenticated());
+    }
   }
 
   void markAuthenticated(UserRole role) {

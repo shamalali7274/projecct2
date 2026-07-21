@@ -13,6 +13,7 @@ class AppConfig {
 
   static const String loginPath = '/login';
   static const String registerPath = '/register';
+  static const String logoutPath = '/logout';
 
   static const String teacherStudentsPath = '/teachers/students';
   static const String teacherStudentsCountPath =
