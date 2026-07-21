@@ -40,7 +40,6 @@
 //   }
 // }
 
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
@@ -84,7 +83,7 @@ class AuthCubit extends Cubit<AuthState> {
         data: {'number': number, 'password': password},
       );
       final data = response.data as Map<String, dynamic>;
-      final token = data['token'] as String;
+      final token = data['access_token'] as String;
       final roleStr = data['role'] as String;
 
       await SecureStorage.saveToken(token);

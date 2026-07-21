@@ -1,19 +1,19 @@
+import 'package:academic_concourse_for_girls/core/util/device_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/cubit/theme_cubit.dart';
 import 'core/navigation/auth_gate.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 
 void main() {
+  GoogleFonts.config.allowRuntimeFetching = false; // ← أضيفي هاد
+  DevicePerformance.configure(isHighEnd: true); // زيدها هون
   runApp(const MusmiahApp());
 }
 
-/// نقطة انطلاق التطبيق.
-///
-/// TODO: عند إضافة ميزات جديدة تحتاج حالة عامة (مثل DashboardBloc)،
-/// ضيفيها هون بنفس القائمة جنب ThemeCubit و AuthCubit.
 class MusmiahApp extends StatelessWidget {
   const MusmiahApp({super.key});
 
@@ -31,12 +31,10 @@ class MusmiahApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
-            // الوضع الآن يُتحكم به من داخل التطبيق عبر ThemeCubit
-            // بدل الاعتماد فقط على إعدادات نظام التشغيل.
             themeMode: mode,
             locale: const Locale('ar'),
             supportedLocales: const [Locale('ar')],
-            localizationsDelegates: const [
+            localizationsDelegates: [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

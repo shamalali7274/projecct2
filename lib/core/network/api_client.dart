@@ -46,14 +46,18 @@ class _AuthInterceptor extends Interceptor {
 /// من داخل Repositories فقط (مو مباشرة من الواجهات).
 class ApiClient {
   ApiClient._internal({required String baseUrl, required this.serverName})
-      : log = Logger('ApiClient-$serverName') {
+    : log = Logger('ApiClient-$serverName') {
     _initLoggerOnce();
 
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConfig.apiTimeoutInMillis),
-        receiveTimeout: const Duration(milliseconds: AppConfig.apiTimeoutInMillis),
+        connectTimeout: const Duration(
+          milliseconds: AppConfig.apiTimeoutInMillis,
+        ),
+        receiveTimeout: const Duration(
+          milliseconds: AppConfig.apiTimeoutInMillis,
+        ),
         headers: const {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -133,7 +137,11 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      return await dio.get(path, queryParameters: queryParameters, options: options);
+      return await dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -146,7 +154,12 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      return await dio.post(path, data: data, queryParameters: queryParameters, options: options);
+      return await dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -159,7 +172,12 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      return await dio.put(path, data: data, queryParameters: queryParameters, options: options);
+      return await dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -172,7 +190,12 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      return await dio.delete(path, data: data, queryParameters: queryParameters, options: options);
+      return await dio.delete(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -212,7 +235,9 @@ class ApiClient {
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         if (statusCode == 401) {
-          return const AuthException('غير مصرح بالدخول، يرجى تسجيل الدخول مجدداً');
+          return const AuthException(
+            'غير مصرح بالدخول، يرجى تسجيل الدخول مجدداً',
+          );
         }
         return ServerException('خطأ في الاستجابة: $statusCode');
       case DioExceptionType.cancel:

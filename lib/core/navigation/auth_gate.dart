@@ -40,7 +40,7 @@ class _AuthGateState extends State<AuthGate> {
         if (state is AuthAuthenticated) {
           return state.role == UserRole.supervisor
               ? const DashboardPage()
-              : const StudentHomePlaceholderPage();
+              : const StudentHomePage();
         }
         // AuthUnauthenticated أو AuthError
         return const OnboardingPage();

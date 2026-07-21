@@ -1,3 +1,4 @@
+import 'package:academic_concourse_for_girls/core/navigation/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,22 +70,22 @@ class _SignUpViewState extends State<_SignUpView> {
 
   void _submit(BuildContext context) {
     context.read<SignUpBloc>().add(
-          SignUpSubmitted(
-            firstName: _firstNameController.text,
-            fatherName: _fatherNameController.text,
-            lastName: _lastNameController.text,
-            motherName: _motherNameController.text,
-            college: _collegeController.text,
-            address: _addressController.text,
-            number: _numberController.text,
-            targetParts: _targetPartsController.text,
-            pageFrom: _pageFromController.text,
-            pageTo: _pageToController.text,
-            taseehDays: _taseehDays,
-            password: _passwordController.text,
-            confirmPassword: _confirmPasswordController.text,
-          ),
-        );
+      SignUpSubmitted(
+        firstName: _firstNameController.text,
+        fatherName: _fatherNameController.text,
+        lastName: _lastNameController.text,
+        motherName: _motherNameController.text,
+        college: _collegeController.text,
+        address: _addressController.text,
+        number: _numberController.text,
+        targetParts: _targetPartsController.text,
+        pageFrom: _pageFromController.text,
+        pageTo: _pageToController.text,
+        taseehDays: _taseehDays,
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      ),
+    );
   }
 
   @override
@@ -98,7 +99,8 @@ class _SignUpViewState extends State<_SignUpView> {
       body: SafeArea(
         child: BlocListener<SignUpBloc, SignUpState>(
           listener: (context, state) {
-            if (state.status == RequestStatus.failure && state.errorMessage != null) {
+            if (state.status == RequestStatus.failure &&
+                state.errorMessage != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.errorMessage!)));
@@ -116,10 +118,18 @@ class _SignUpViewState extends State<_SignUpView> {
               Align(
                 alignment: Alignment.topRight,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, AppSpacing.md, AppSpacing.xl, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.xl,
+                    0,
+                  ),
                   child: IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(Icons.arrow_forward, color: scheme.onSurfaceVariant),
+                    icon: Icon(
+                      Icons.arrow_forward,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     style: IconButton.styleFrom(
                       backgroundColor: scheme.surfaceContainerLow,
                       shape: const CircleBorder(),
@@ -129,7 +139,9 @@ class _SignUpViewState extends State<_SignUpView> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -137,7 +149,9 @@ class _SignUpViewState extends State<_SignUpView> {
                       Text(
                         'إنشاء حساب',
                         textAlign: TextAlign.center,
-                        style: textTheme.headlineSmall?.copyWith(color: scheme.primary),
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: scheme.primary,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
@@ -202,7 +216,9 @@ class _SignUpViewState extends State<_SignUpView> {
                         keyboardType: TextInputType.number,
                         textDirection: TextDirection.ltr,
                         maxLength: 10,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                       ),
 
                       const SizedBox(height: AppSpacing.lg),
@@ -215,7 +231,9 @@ class _SignUpViewState extends State<_SignUpView> {
                         controller: _targetPartsController,
                         keyboardType: TextInputType.number,
                         maxLength: 2,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         suffixText: 'جزء',
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -230,7 +248,9 @@ class _SignUpViewState extends State<_SignUpView> {
                               controller: _pageFromController,
                               keyboardType: TextInputType.number,
                               maxLength: 3,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                             ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
@@ -242,7 +262,9 @@ class _SignUpViewState extends State<_SignUpView> {
                               controller: _pageToController,
                               keyboardType: TextInputType.number,
                               maxLength: 3,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                             ),
                           ),
                         ],
@@ -250,7 +272,8 @@ class _SignUpViewState extends State<_SignUpView> {
                       const SizedBox(height: AppSpacing.md),
                       TaseehDaysSelector(
                         selected: _taseehDays,
-                        onChanged: (option) => setState(() => _taseehDays = option),
+                        onChanged: (option) =>
+                            setState(() => _taseehDays = option),
                       ),
 
                       const SizedBox(height: AppSpacing.lg),
@@ -286,7 +309,7 @@ class _SignUpViewState extends State<_SignUpView> {
                       GestureDetector(
                         onTap: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const SignInPage()),
+                            TelegramPageRoute(page: const SignInPage()),
                           );
                         },
                         child: RichText(
@@ -297,7 +320,10 @@ class _SignUpViewState extends State<_SignUpView> {
                               const TextSpan(text: 'لديكِ حساب؟ '),
                               TextSpan(
                                 text: 'تسجيل الدخول',
-                                style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -326,9 +352,9 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: scheme.secondary,
-            fontWeight: FontWeight.bold,
-          ),
+        color: scheme.secondary,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:academic_concourse_for_girls/core/navigation/page_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -45,22 +46,19 @@ class _OnboardingViewState extends State<_OnboardingView> {
   }
 
   void _goToSignIn(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SignInPage()),
-    );
+    Navigator.of(context).push(TelegramPageRoute(page: const SignInPage()));
   }
 
   void _goToSignUp(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SignUpPage()),
-    );
+    Navigator.of(context).push(TelegramPageRoute(page: const SignUpPage()));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<OnboardingCubit, int>(
       listener: (context, index) {
-        if (_pageController.hasClients && _pageController.page?.round() != index) {
+        if (_pageController.hasClients &&
+            _pageController.page?.round() != index) {
           _pageController.animateToPage(
             index,
             duration: const Duration(milliseconds: 350),
@@ -73,7 +71,8 @@ class _OnboardingViewState extends State<_OnboardingView> {
           children: [
             PageView(
               controller: _pageController,
-              onPageChanged: (index) => context.read<OnboardingCubit>().goTo(index),
+              onPageChanged: (index) =>
+                  context.read<OnboardingCubit>().goTo(index),
               children: [
                 const WelcomeSlide(),
                 const MemorizationTrackingSlide(),
@@ -85,7 +84,9 @@ class _OnboardingViewState extends State<_OnboardingView> {
               ],
             ),
             Positioned(
-              bottom: AppSpacing.xxl + AppSpacing.md, // رفعناها شوي لفوق (56 بدل 40)
+              bottom:
+                  AppSpacing.xxl +
+                  AppSpacing.md, // رفعناها شوي لفوق (56 بدل 40)
               left: 0,
               right: 0,
               child: Center(

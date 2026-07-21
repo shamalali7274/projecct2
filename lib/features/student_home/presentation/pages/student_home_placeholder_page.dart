@@ -1,31 +1,466 @@
+import 'dart:math';
+import 'package:academic_concourse_for_girls/features/student_home/domain/enities/student_dashboard_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/bloc/request_status.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/app_bottom_nav.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../core/widgets/circular_progress_ring.dart';
+import '../../../../core/widgets/stat_info_card.dart';
 import '../../../../core/widgets/theme_toggle_button.dart';
+import '../cubit/student_dashboard_cubit.dart';
+import '../cubit/student_dashboard_state.dart';
 
-/// واجهات الطالبة الفعلية لسا ما بُنيت (خارج نطاق الشغل الحالي).
-/// هاي صفحة مؤقتة هدفها التأكد إن التوجيه حسب role شغّال صح —
-/// التصميم الحقيقي رح ييجي بمرحلة قادمة.
-class StudentHomePlaceholderPage extends StatelessWidget {
-  const StudentHomePlaceholderPage({super.key});
+/// الواجهة الرئيسية للطالبة — تحويل مباشر لمخطط الـ HTML (Bento Grid)
+/// لنفس نظام التصميم (AppColors/AppCard/CircularProgressRing...) اللي
+/// التطبيق أصلاً مبني عليه.
+///
+/// نفس نمط DashboardPage (المعلّمة) تماماً: BlocProvider هون بالخارج،
+/// و _StudentHomeView جوّا بتستهلك الحالة.
+class StudentHomePage extends StatelessWidget {
+  const StudentHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => StudentDashboardCubit()..load(),
+      child: const _StudentHomeView(),
+    );
+  }
+}
+
+class _StudentHomeView extends StatefulWidget {
+  const _StudentHomeView();
+
+  @override
+  State<_StudentHomeView> createState() => _StudentHomeViewState();
+}
+
+class _StudentHomeViewState extends State<_StudentHomeView> {
+  int _navIndex = 0;
+
+  void _handleNavTap(int index) {
+    // TODO: الكليات/الفعاليات/المكتبة/حسابي — صفحات لاحقة، خارج نطاق
+    // هاي الجولة (ربط APIs الطالبة فقط). حالياً بس بتبدّل التبويب.
+    setState(() => _navIndex = index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppTopBar(
+        title: 'الملتقى الجامعي',
+        subtitle: 'أهلاً بعودتكِ 🌿',
+        avatarUrl: '',
+        actions: const [AppTopBarAction(icon: Icons.notifications_none)],
+        trailing: const ThemeToggleButton(),
+      ),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: _navIndex,
+        onTap: _handleNavTap,
+        items: const [
+          AppNavItem(icon: Icons.home_outlined, label: 'الرئيسية'),
+          AppNavItem(icon: Icons.school_outlined, label: 'الكليات'),
+          AppNavItem(icon: Icons.event_outlined, label: 'الفعاليات'),
+          AppNavItem(icon: Icons.local_library_outlined, label: 'المكتبة'),
+          AppNavItem(icon: Icons.person_outline, label: 'حسابي'),
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: BlocBuilder<StudentDashboardCubit, StudentDashboardState>(
+          builder: (context, state) {
+            if (state.status == RequestStatus.failure) {
+              return _ErrorView(
+                message: state.errorMessage ?? 'حدث خطأ',
+                onRetry: () => context.read<StudentDashboardCubit>().load(),
+              );
+            }
+
+            if (state.status != RequestStatus.success || state.data == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final data = state.data!;
+
+            return RefreshIndicator(
+              onRefresh: () => context.read<StudentDashboardCubit>().load(),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  140,
+                ),
+                children: [
+                  _HeroGreeting(name: data.fullName),
+                  const SizedBox(height: AppSpacing.xxl),
+                  // ═══ مسار الحفظ + بطاقة الهوية (نفس صف الـ HTML md:col-span-7/5) ═══
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth > 560;
+                      final progressCard = _ProgressCard(data: data);
+                      final idCard = _DigitalIdCard(data: data);
+                      if (isWide) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(flex: 7, child: progressCard),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(flex: 5, child: idCard),
+                          ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          progressCard,
+                          const SizedBox(height: AppSpacing.lg),
+                          idCard,
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  // ═══ سجل الإنجاز (Heat-map) — عرض فقط، بلا مصدر بيانات حقيقي بعد ═══
+                  const _ActivityHeatmapCard(),
+                  const SizedBox(height: AppSpacing.lg),
+                  // ═══ الترتيب: عام / كلية / مسار ═══
+                  StatInfoCard(
+                    label: 'ترتيب الكلية',
+                    value: 'المركز ${data.collegeRanking}',
+                    icon: Icons.workspace_premium_outlined,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  StatInfoCard(
+                    label: 'الترتيب العام',
+                    value: 'المركز ${data.ranking}',
+                    icon: Icons.military_tech_outlined,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  StatInfoCard(
+                    label: 'ترتيب المسار (${data.path})',
+                    value: 'المركز ${data.pathRanking}',
+                    icon: Icons.route_outlined,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  // ═══ تسجيل ورد اليوم — واجهة فقط، ما في endpoint لها بعد ═══
+                  const _LogProgressCard(),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroGreeting extends StatelessWidget {
+  const _HeroGreeting({required this.name});
+  final String name;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: scheme.surface,
-        surfaceTintColor: Colors.transparent,
-        title: const Text('واجهة الطالبة'),
-        actions: const [ThemeToggleButton()],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Text(
-            'تسجيل الدخول نجح كـ "طالبة" ✅\nواجهات الطالبة رح نبنيها بمرحلة قادمة.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
+    final textTheme = Theme.of(context).textTheme;
+    final firstName = name.trim().isEmpty ? '' : name.trim().split(' ').first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          firstName.isEmpty ? 'أهلاً بكِ' : 'أهلاً بكِ يا $firstName',
+          style: textTheme.headlineMedium?.copyWith(color: scheme.primary),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'يومٌ جديد ممتلئ بالبركة والجمال في رحاب القرآن.',
+          style: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({required this.data});
+  final StudentDashboardEntity data;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return AppCard(
+      child: Column(
+        children: [
+          Text('مسار الحفظ الحالي', style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.lg),
+          CircularProgressRing(
+            percent: data.progressPercent,
+            size: 160,
+            label: '${data.achievement} / ${data.goal} جزء',
           ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'بارك الله فيكِ، استمري يا قمر ✨',
+            style: textTheme.titleSmall?.copyWith(
+              color: scheme.primaryContainer,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DigitalIdCard extends StatelessWidget {
+  const _DigitalIdCard({required this.data});
+  final StudentDashboardEntity data;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      backgroundColor: scheme.primaryContainer,
+      withShadow: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white.withOpacity(0.2),
+                child: const Icon(Icons.qr_code_2, color: Colors.white),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: const Text(
+                  'عضوية فضية',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            data.fullName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            data.college,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
+          Divider(color: Colors.white.withOpacity(0.15), height: 1),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'المسار',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 11,
+            ),
+          ),
+          Text(
+            '${data.path} — الهدف ${data.goal} جزء',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// سجل الإنجاز اليومي (Heat-map) — نفس تصميم الـ HTML، بس بلا مصدر
+/// بيانات حقيقي حالياً (الـ 5 endpoints المُعطاة ما فيها نشاط يومي).
+/// القيم هون عرض فقط (placeholder) — لما ينضاف endpoint مخصص لهاد
+/// الغرض، بس بدّلي التوليد العشوائي تحت بقيم حقيقية من الـ API.
+class _ActivityHeatmapCard extends StatelessWidget {
+  const _ActivityHeatmapCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final random = Random(7); // seed ثابت حتى ما يتغيّر شكلها كل rebuild
+
+    const days = [
+      'السبت',
+      'الأحد',
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+    ];
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('سجل الإنجاز اليومي', style: textTheme.titleMedium),
+              Row(
+                children: [
+                  Icon(Icons.trending_up, size: 16, color: scheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'أداء ممتاز هذا الشهر',
+                    style: textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 35,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+            ),
+            itemBuilder: (context, index) {
+              final intensity = random.nextDouble();
+              Color color = scheme.surfaceContainerHighest;
+              if (intensity > 0.8) {
+                color = scheme.primary;
+              } else if (intensity > 0.5) {
+                color = scheme.primary.withOpacity(0.6);
+              } else if (intensity > 0.2) {
+                color = scheme.primary.withOpacity(0.3);
+              }
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: days
+                .map(
+                  (d) => Text(
+                    d,
+                    style: textTheme.labelSmall?.copyWith(fontSize: 9),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// فورم تسجيل ورد اليوم — واجهة فقط حالياً. ما في ضمن الـ 5 endpoints
+/// يلي بعتيتيهم أي API لحفظ ورد جديد، لهيك الزر معطّل مع رسالة توضيحية
+/// بدل ما يبعث request لمكان مش موجود.
+class _LogProgressCard extends StatelessWidget {
+  const _LogProgressCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return AppCard(
+      child: Column(
+        children: [
+          Text('تسجيل ورد اليوم', style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.lg),
+          const Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'الجزء'),
+                ),
+              ),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'الصفحات'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('هاي الميزة لسا بدون API — قريباً إن شاء الله'),
+                ),
+              );
+            },
+            child: const Text('تحديث السجل'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('إعادة المحاولة'),
+            ),
+          ],
         ),
       ),
     );
