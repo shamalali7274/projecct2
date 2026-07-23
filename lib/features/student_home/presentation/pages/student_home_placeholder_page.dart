@@ -10,6 +10,8 @@ import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/circular_progress_ring.dart';
 import '../../../../core/widgets/stat_info_card.dart';
 import '../../../../core/widgets/theme_toggle_button.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../student_recitations/presentation/pages/my_recitations_page.dart';
 import '../cubit/student_dashboard_cubit.dart';
 import '../cubit/student_dashboard_state.dart';
 
@@ -42,7 +44,39 @@ class _StudentHomeViewState extends State<_StudentHomeView> {
   int _navIndex = 0;
 
   void _handleNavTap(int index) {
-    // TODO: الكليات/الفعاليات/المكتبة/حسابي — صفحات لاحقة، خارج نطاق
+    if (index == 2) {
+      // "تسميعاتي" — سجل تسميعات الطالبة نفسها (بديل تبويب "الفعاليات").
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const MyRecitationsPage()),
+      );
+      return;
+    }
+    if (index == 4) {
+      // "حسابي" — نفس صفحة الإعدادات المستخدمة بجانب المعلّمة، بس
+      // مع بار سفلي خاص بالطالبة (5 تبويبات بدل 4). التبويبات
+      // التانية (الكليات/المكتبة) لسا خارج نطاق هاي الجولة،
+      // فبنكتفي بالرجوع للرئيسية لو ضغطت عليهم من هون.
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => SettingsPage(
+            navIndex: 4,
+            navItems: const [
+              AppNavItem(icon: Icons.home_outlined, label: 'الرئيسية'),
+              AppNavItem(icon: Icons.school_outlined, label: 'الكليات'),
+              AppNavItem(icon: Icons.auto_stories_outlined, label: 'تسميعاتي'),
+              AppNavItem(icon: Icons.local_library_outlined, label: 'المكتبة'),
+              AppNavItem(icon: Icons.person_outline, label: 'حسابي'),
+            ],
+            onNavTap: (i) {
+              if (i == 4) return;
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    // TODO: الكليات/المكتبة — صفحات لاحقة، خارج نطاق
     // هاي الجولة (ربط APIs الطالبة فقط). حالياً بس بتبدّل التبويب.
     setState(() => _navIndex = index);
   }
@@ -63,7 +97,7 @@ class _StudentHomeViewState extends State<_StudentHomeView> {
         items: const [
           AppNavItem(icon: Icons.home_outlined, label: 'الرئيسية'),
           AppNavItem(icon: Icons.school_outlined, label: 'الكليات'),
-          AppNavItem(icon: Icons.event_outlined, label: 'الفعاليات'),
+          AppNavItem(icon: Icons.auto_stories_outlined, label: 'تسميعاتي'),
           AppNavItem(icon: Icons.local_library_outlined, label: 'المكتبة'),
           AppNavItem(icon: Icons.person_outline, label: 'حسابي'),
         ],

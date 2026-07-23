@@ -8,15 +8,32 @@ import '../../../../core/widgets/app_menu_tile.dart';
 import '../../../../core/widgets/theme_toggle_button.dart';
 import '../../../../core/widgets/confirm_action_dialog.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../../students/presentation/pages/students_list_page.dart';
 
-/// صفحة الإعدادات — تُفتح من تبويب "الإعدادات" بالبار السفلي، بنفس
-/// نمط باقي الصفحات (AppTopBar + AppBottomNav + AppCard + AppMenuTile
-/// كلها مكوّنات جاهزة، ما تكرر ولا سطر بنائها من جديد هون).
+/// صفحة الإعدادات — مشتركة بين واجهة المعلّمة وواجهة الطالبة.
+///
+/// بما إنو كل صفحة (لوحة المعلّمة / قائمة الطالبات / الرئيسية تبع
+/// الطالبة) عندها بار سفلي بعدد تبويبات وسلوك تنقّل مختلف، ما بنينا
+/// بار جوّا هاي الصفحة، وإنما بناخده باراميتر (navItems / navIndex /
+/// onNavTap) من الصفحة اللي فتحتها — هيك صفحة الإعدادات (وزر تسجيل
+/// الخروج المربوط بالباك ايند فيها) تُبنى مرة وحدة بس، وتُستدعى بأي
+/// مكان بإعدادات بار مختلفة بدل تكرار الكود.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({
+    super.key,
+    required this.navItems,
+    required this.navIndex,
+    required this.onNavTap,
+  });
 
-  static const int _navIndex = 3;
+  /// عناصر البار السفلي الخاصة بالصفحة الأم (المعلّمة أو الطالبة).
+  final List<AppNavItem> navItems;
+
+  /// index تبويب "الإعدادات/حسابي" ضمن navItems (يظهر محدَّد بالبار).
+  final int navIndex;
+
+  /// شو بيصير لما تضغط الأنسة/الطالبة على تبويب تاني وهي بصفحة
+  /// الإعدادات — كل صفحة أم بتقرر هي كيف ترجع/تتنقل.
+  final ValueChanged<int> onNavTap;
 
   Future<void> _handleLogout(BuildContext context) async {
     final confirmed = await showConfirmActionDialog(
@@ -30,9 +47,9 @@ class SettingsPage extends StatelessWidget {
     if (!context.mounted) return;
 
     // AuthCubit.logout() بيستدعي AuthController@logout بالباك ايند
-    // (POST /api/logout) وبعدين يمسح الجلسة محلياً. AuthGate بالأعلى
-    // هو اللي بيسمع للحالة الجديدة (AuthUnauthenticated) وبيرجّع
-    // الأنسة لصفحة تسجيل الدخول تلقائياً.
+    // (POST /api/logout) وبعدين يمسح الجلسة محلياً — نفس التابع
+    // بالضبط، سواء الحساب حساب معلّمة أو حساب طالبة، لأنو الباك ايند
+    // نفسه واحد لكل الأدوار (يعتمد على التوكن الحالي بس).
     await context.read<AuthCubit>().logout();
   }
 
@@ -46,23 +63,9 @@ class SettingsPage extends StatelessWidget {
         trailing: const ThemeToggleButton(),
       ),
       bottomNavigationBar: AppBottomNav(
-        currentIndex: _navIndex,
-        onTap: (i) {
-          if (i == _navIndex) return;
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          if (i == 1) {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const StudentsListPage()),
-            );
-          }
-          // باقي التبويبات (الرئيسية عبر popUntil فوق، الإنجازات) TODO لاحقاً
-        },
-        items: const [
-          AppNavItem(icon: Icons.dashboard, label: 'الرئيسية'),
-          AppNavItem(icon: Icons.groups_outlined, label: 'الطالبات'),
-          AppNavItem(icon: Icons.auto_stories_outlined, label: 'الإنجازات'),
-          AppNavItem(icon: Icons.settings_outlined, label: 'الإعدادات'),
-        ],
+        currentIndex: navIndex,
+        onTap: onNavTap,
+        items: navItems,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -76,21 +79,9 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Column(
               children: [
-                AppMenuTile(
-                  icon: Icons.person_outline,
-                  label: 'الملف الشخصي',
-                  onTap: () {},
-                ),
-                AppMenuTile(
-                  icon: Icons.notifications_none,
-                  label: 'الإشعارات',
-                  onTap: () {},
-                ),
-                AppMenuTile(
-                  icon: Icons.info_outline,
-                  label: 'حول التطبيق',
-                  onTap: () {},
-                ),
+                AppMenuTile(icon: Icons.person_outline, label: 'الملف الشخصي', onTap: () {}),
+                AppMenuTile(icon: Icons.notifications_none, label: 'الإشعارات', onTap: () {}),
+                AppMenuTile(icon: Icons.info_outline, label: 'حول التطبيق', onTap: () {}),
               ],
             ),
           ),

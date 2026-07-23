@@ -11,10 +11,17 @@ class AchievementTimelineTile extends StatelessWidget {
     super.key,
     required this.achievement,
     required this.isLast,
+    this.onTap,
   });
 
   final AchievementEntity achievement;
   final bool isLast;
+
+  /// اختياري: لو تم تمريره (متل صفحة "تسميعاتي" عند الطالبة)، الضغط
+  /// على البطاقة بيفتح مراجعة القرآن الخاصة بهاد الإنجاز. بجانب
+  /// الأنسة (StudentDetailPage) ما تم تمريره فبتضل البطاقة بشكلها
+  /// الحالي بدون أي تغيير بالسلوك.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +72,13 @@ class AchievementTimelineTile extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-              child: Container(
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: isMilestone
@@ -111,9 +124,13 @@ class AchievementTimelineTile extends StatelessWidget {
                         ),
                         if (achievement.pagesLabel.isNotEmpty)
                           Text(achievement.pagesLabel, style: textTheme.labelSmall),
+                        if (onTap != null)
+                          Icon(Icons.chevron_left, size: 16, color: scheme.outline),
                       ],
                     ),
                   ],
+                ),
+                  ),
                 ),
               ),
             ),

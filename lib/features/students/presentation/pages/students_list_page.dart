@@ -65,7 +65,26 @@ class _StudentsListViewState extends State<_StudentsListView> {
     }
     if (index == 3) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const SettingsPage()),
+        MaterialPageRoute(
+          builder: (_) => SettingsPage(
+            navIndex: 3,
+            navItems: const [
+              AppNavItem(icon: Icons.dashboard, label: 'الرئيسية'),
+              AppNavItem(icon: Icons.groups_outlined, label: 'الطالبات'),
+              AppNavItem(icon: Icons.auto_stories_outlined, label: 'الإنجازات'),
+              AppNavItem(icon: Icons.settings_outlined, label: 'الإعدادات'),
+            ],
+            onNavTap: (i) {
+              if (i == 3) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              if (i == 1) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const StudentsListPage()),
+                );
+              }
+            },
+          ),
+        ),
       );
       return;
     }

@@ -253,7 +253,28 @@ class _DashboardViewState extends State<_DashboardView> {
   }
 
   void _openSettings() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SettingsPage(
+          navIndex: 3,
+          navItems: const [
+            AppNavItem(icon: Icons.dashboard, label: 'الرئيسية'),
+            AppNavItem(icon: Icons.groups_outlined, label: 'الطالبات'),
+            AppNavItem(icon: Icons.auto_stories_outlined, label: 'الإنجازات'),
+            AppNavItem(icon: Icons.settings_outlined, label: 'الإعدادات'),
+          ],
+          onNavTap: (i) {
+            if (i == 3) return;
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            if (i == 1) {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StudentsListPage()),
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   void _handleNavTap(int index) {
