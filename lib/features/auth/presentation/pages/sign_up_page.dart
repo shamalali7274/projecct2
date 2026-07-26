@@ -9,11 +9,13 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/navigation/auth_gate.dart';
 import '../../domain/entities/taseeh_days_option.dart';
+import '../../domain/entities/masar_option.dart';
 import '../bloc/sign_up_bloc.dart';
 import '../bloc/sign_up_event.dart';
 import '../bloc/sign_up_state.dart';
 import '../cubit/auth_cubit.dart';
 import '../widgets/taseeh_days_selector.dart';
+import '../widgets/masar_selector.dart';
 import 'sign_in_page.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -50,6 +52,7 @@ class _SignUpViewState extends State<_SignUpView> {
   final _confirmPasswordController = TextEditingController();
 
   TaseehDaysOption _taseehDays = TaseehDaysOption.sundayTuesdayThursday;
+  MasarOption _masar = MasarOption.zad;
 
   @override
   void dispose() {
@@ -82,6 +85,7 @@ class _SignUpViewState extends State<_SignUpView> {
         pageFrom: _pageFromController.text,
         pageTo: _pageToController.text,
         taseehDays: _taseehDays,
+        masar: _masar,
         password: _passwordController.text,
         confirmPassword: _confirmPasswordController.text,
       ),
@@ -127,7 +131,7 @@ class _SignUpViewState extends State<_SignUpView> {
                   child: IconButton(
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: Icon(
-                      Icons.arrow_forward,
+                      Icons.arrow_back_ios,
                       color: scheme.onSurfaceVariant,
                     ),
                     style: IconButton.styleFrom(
@@ -274,6 +278,11 @@ class _SignUpViewState extends State<_SignUpView> {
                         selected: _taseehDays,
                         onChanged: (option) =>
                             setState(() => _taseehDays = option),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      MasarSelector(
+                        selected: _masar,
+                        onChanged: (option) => setState(() => _masar = option),
                       ),
 
                       const SizedBox(height: AppSpacing.lg),

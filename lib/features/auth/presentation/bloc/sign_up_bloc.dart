@@ -51,6 +51,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
           pageFrom: int.parse(event.pageFrom.trim()),
           pageTo: int.parse(event.pageTo.trim()),
           taseehDays: event.taseehDays,
+          masar: event.masar,
           password: event.password,
         ),
       );
@@ -115,8 +116,8 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       return 'عدد الصفحات المحددة ($pageCount) لا يتناسب مع عدد الأجزاء ($target)';
     }
 
-    if (event.password.length < 6) {
-      return 'كلمة السر يجب ألا تقل عن 6 خانات';
+    if (event.password.length < 8) {
+      return 'كلمة السر يجب ألا تقل عن 8 خانات';
     }
 
     if (event.password != event.confirmPassword) {

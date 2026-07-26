@@ -1,3 +1,4 @@
+import '../../domain/entities/masar_option.dart';
 import '../../domain/entities/taseeh_days_option.dart';
 
 abstract class SignUpEvent {
@@ -17,6 +18,7 @@ class SignUpSubmitted extends SignUpEvent {
     required this.pageFrom,
     required this.pageTo,
     required this.taseehDays,
+    required this.masar,
     required this.password,
     required this.confirmPassword,
   });
@@ -32,6 +34,7 @@ class SignUpSubmitted extends SignUpEvent {
   final String pageFrom;
   final String pageTo;
   final TaseehDaysOption taseehDays;
+  final MasarOption masar;
   final String password;
   final String confirmPassword;
 }

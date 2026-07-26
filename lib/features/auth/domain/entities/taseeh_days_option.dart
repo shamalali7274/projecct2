@@ -1,8 +1,8 @@
-/// خيارات أيام التسميع المتاحة عند إنشاء الحساب.
 enum TaseehDaysOption {
-  sundayTuesdayThursday('الأحد - الثلاثاء - الخميس'),
-  saturdayMondayWednesday('السبت - الاثنين - الأربعاء');
+  sundayTuesdayThursday('الأحد - الثلاثاء - الخميس', 'SundayTuesdayThursday'),
+  saturdayMondayWednesday('السبت - الاثنين - الأربعاء', 'SaturdayMondayWednesday');
 
-  const TaseehDaysOption(this.label);
+  const TaseehDaysOption(this.label, this.apiValue);
   final String label;
+  final String apiValue;
 }

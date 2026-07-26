@@ -28,7 +28,7 @@ class AuthRepositoryImpl implements AuthRepository {
         '/login',
         data: {'number': credentials.number, 'password': credentials.password},
       );
-      return _handleAuthResponse(response.data as Map<String, dynamic>);
+      return _handleSignInResponse(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw AuthException(_mapDioError(e));
     }
@@ -45,16 +45,18 @@ class AuthRepositoryImpl implements AuthRepository {
           'last_name': data.lastName,
           'mother_name': data.motherName,
           'college': data.college,
-          'address': data.address,
+          'home_address': data.address,
           'number': data.number,
-          'target_parts': data.targetParts,
-          'page_from': data.pageFrom,
-          'page_to': data.pageTo,
-          'taseeh_days': data.taseehDays.name,
+          'goal': data.targetParts,
+          'start_page': data.pageFrom,
+          'end_page': data.pageTo,
+          'days_of_memorization': data.taseehDays.apiValue,
+          'path': data.masar.apiValue,
           'password': data.password,
         },
       );
-      return _handleAuthResponse(response.data as Map<String, dynamic>);
+      
+      return _handleSignUpResponse(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw AuthException(_mapDioError(e));
     }
@@ -63,21 +65,33 @@ class AuthRepositoryImpl implements AuthRepository {
   /// يقرأ access_token و role من استجابة الباك ايند، ويحفظهم محلياً
   /// فوراً (SecureStorage) + يفعّل التوكن بـ ApiClient — بدل ما تتوزع
   /// مسؤولية الحفظ بين الـ Bloc والـ Repository.
-  Future<AuthSessionEntity> _handleAuthResponse(Map<String, dynamic> json) async {
-    final token = json['access_token'] as String?;
-    final roleRaw = json['role'] as String?;
-    if (token == null || token.isEmpty || roleRaw == null) {
-      throw AuthException('استجابة غير متوقعة من الخادم');
+   Future<AuthSessionEntity> _handleSignInResponse(Map<String, dynamic> json) async {
+      final token = json['access_token'] as String?;
+      final roleRaw = json['role'] as String?;
+      if (token == null || token.isEmpty || roleRaw == null) {
+        throw AuthException('استجابة غير متوقعة من الخادم');
+      }
+      final role = UserRoleX.fromApi(roleRaw);
+      await SecureStorage.saveToken(token);
+      await SecureStorage.saveRole(role.name);
+      ApiClient.instance.setToken(token);
+      return AuthSessionEntity(token: token, role: role);
     }
 
-    final role = UserRoleX.fromApi(roleRaw);
-
-    await SecureStorage.saveToken(token);
-    await SecureStorage.saveRole(role.name);
-    ApiClient.instance.setToken(token);
-
-    return AuthSessionEntity(token: token, role: role);
-  }
+    /// رد /register ما فيه role أبداً (الباك إند ما بيرجعها بعد التسجيل)،
+    /// وبما إنو أي حساب جديد بينسجل تلقائياً كـ student بالباك إند،
+    /// منحطها هون صراحة بدل ما نستناها من رد ما رح توصل أبداً.
+    Future<AuthSessionEntity> _handleSignUpResponse(Map<String, dynamic> json) async {
+      final token = json['access_token'] as String?;
+      if (token == null || token.isEmpty) {
+        throw AuthException('استجابة غير متوقعة من الخادم');
+      }
+      const role = UserRole.student;
+      await SecureStorage.saveToken(token);
+      await SecureStorage.saveRole(role.name);
+      ApiClient.instance.setToken(token);
+      return AuthSessionEntity(token: token, role: role);
+    }
 
   String _mapDioError(DioException e) {
     if (e.response?.statusCode == 401) {
@@ -85,6 +99,20 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     if (e.response?.statusCode == 409) {
       return 'رقم الهاتف مسجّل مسبقاً';
+    }
+    if (e.response?.statusCode == 422) {
+      final data = e.response?.data;
+      if (data is Map && data['errors'] is Map) {
+        final errors = data['errors'] as Map;
+        final firstFieldErrors = errors.values.first;
+        if (firstFieldErrors is List && firstFieldErrors.isNotEmpty) {
+          return firstFieldErrors.first.toString();
+        }
+      }
+      if (data is Map && data['message'] != null) {
+        return data['message'].toString();
+      }
+      return 'تحققي من صحة البيانات المدخلة';
     }
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
