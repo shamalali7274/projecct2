@@ -18,7 +18,7 @@ Future<WordHighlightColor?> showWordColorPicker(BuildContext context) {
         WordHighlightColor.green,
         WordHighlightColor.red,
         WordHighlightColor.blue,
-        WordHighlightColor.brown,
+        WordHighlightColor.yellow,
       ];
 
       return SafeArea(

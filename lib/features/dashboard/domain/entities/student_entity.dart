@@ -17,6 +17,7 @@ class StudentEntity {
     required this.totalParts,
     required this.lastAchievementLabel,
     required this.badgeIcon,
+    this.teacherId,
   });
 
   final String id;
@@ -28,6 +29,13 @@ class StudentEntity {
   final double totalParts;
   final String lastAchievementLabel;
   final IconData badgeIcon;
+
+  /// معرّف الأنسة (Teacher.id — مو User.id) المالكة لهاي الطالبة.
+  /// موجود بمعظم الاستجابات (getStudents/getStudentByName) لأنو عمود
+  /// خام بجدول students، وغائب فقط بـ searchStudentById (استجابتها
+  /// مبنية يدوياً بحقول محددة بالباك ايند). نعتمد عليه لتعبئة
+  /// teacher_id المطلوب عند إنشاء جلسة تسميع جديدة.
+  final int? teacherId;
 
   double get progress => totalParts == 0 ? 0 : completedParts / totalParts;
 }

@@ -23,8 +23,14 @@ class RecitationRepository {
   /// POST /recitation-sessions — تُستخدم لما ما في تسميع قادم مجدول
   /// أصلاً للطالبة (next-session بيرجع 404)، فالأنسة تحدد نطاق صفحات
   /// جديد وتبدأ جلسة جديدة بحالة "upcoming".
+  ///
+  /// ⚠️ teacherId إلزامي بالباك ايند (StoreRecitationSessionRequest:
+  /// 'teacher_id' => 'required|exists:teachers,id') — لو ما انبعت كان
+  /// السبب المباشر لخطأ 422 اللي طلع. هاد الرقم ييجي من
+  /// TeacherRepository.getMyTeacherId() مش من إدخال يدوي.
   Future<RecitationSessionEntity> createSession({
     required int studentId,
+    required int teacherId,
     required int fromPage,
     required int toPage,
     String? scheduledDate,
@@ -33,6 +39,7 @@ class RecitationRepository {
       AppConfig.recitationSessionsPath,
       data: {
         'student_id': studentId,
+        'teacher_id': teacherId,
         'from_page': fromPage,
         'to_page': toPage,
         if (scheduledDate != null) 'scheduled_date': scheduledDate,

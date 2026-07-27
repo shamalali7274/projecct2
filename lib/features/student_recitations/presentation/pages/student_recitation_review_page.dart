@@ -158,20 +158,24 @@ class _QuranPageCard extends StatelessWidget {
         children: [
           _buildBasmalaPill(context, scheme),
           const SizedBox(height: AppSpacing.xl),
-          Wrap(
-            alignment: WrapAlignment.center,
-            runSpacing: 16,
-            spacing: 6,
-            textDirection: TextDirection.rtl,
-            children: [
-              for (final word in page.words)
-                HighlightableWord(
-                  text: word.text,
-                  highlight: word.highlight,
-                  readOnly: true, // الطالبة تشوف بس، ما تقدر تعدّل تصحيح الأنسة
-                ),
-            ],
-          ),
+          for (final line in page.lines)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Wrap(
+                alignment: line.isCentered ? WrapAlignment.center : WrapAlignment.start,
+                runSpacing: 16,
+                spacing: 6,
+                textDirection: TextDirection.rtl,
+                children: [
+                  for (final word in line.words)
+                    HighlightableWord(
+                      text: word.text,
+                      highlight: word.highlight,
+                      readOnly: true, // الطالبة تشوف بس، ما تقدر تعدّل تصحيح الأنسة
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );

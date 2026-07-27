@@ -12,12 +12,27 @@ class StudentModel extends StudentEntity {
     required super.totalParts,
     required super.lastAchievementLabel,
     required super.badgeIcon,
+    super.teacherId,
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) {
-    final fatherName = (json['father_name'] as String?)?.trim() ?? '';
+    // الباك ايند (TeachersController@getStudents) صار يحط الاسم الكامل
+    // جاهز بحقل full_name (first_name من علاقة user + last_name)، وهاد
+    // بالضبط الإصلاح اللي طلع بعد تحديث الباك ايند. قبل هيك كان الاسم
+    // يُبنى محلياً من father_name + last_name بس (بدون first_name!) وهيك
+    // كان اسم الطالبة ما يبين. منعتمد full_name أولاً، وإذا غاب لأي سبب
+    // (استجابة قديمة أو endpoint تاني) منرجع نبنيه يدوياً من first_name
+    // (تحت علاقة user المتضمّنة بالاستجابة) + last_name كخطة بديلة.
+    final fullNameFromApi = (json['full_name'] as String?)?.trim();
+
+    final userJson = json['user'] as Map<String, dynamic>?;
+    final firstName = (userJson?['first_name'] as String?)?.trim() ?? '';
     final lastName = (json['last_name'] as String?)?.trim() ?? '';
-    final displayName = [fatherName, lastName].where((s) => s.isNotEmpty).join(' ');
+    final fallbackName = [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
+
+    final displayName = (fullNameFromApi != null && fullNameFromApi.isNotEmpty)
+        ? fullNameFromApi
+        : fallbackName;
 
     return StudentModel(
       id: json['id'].toString(),
@@ -29,6 +44,7 @@ class StudentModel extends StudentEntity {
       totalParts: (json['goal'] as num?)?.toDouble() ?? 0,
       lastAchievementLabel: 'الهدف: ${json['goal'] ?? 0} جزء',
       badgeIcon: Icons.verified,
+      teacherId: (json['teacher_id'] as num?)?.toInt(),
     );
   }
 

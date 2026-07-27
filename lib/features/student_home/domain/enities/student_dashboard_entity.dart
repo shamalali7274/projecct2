@@ -7,6 +7,7 @@
 /// totalStudents هون، والواجهة رح تعرض الرقم لحاله بدل "١٢ من ١٢٠٠".
 class StudentDashboardEntity {
   const StudentDashboardEntity({
+    required this.id,
     required this.fullName,
     required this.goal,
     required this.path,
@@ -17,6 +18,11 @@ class StudentDashboardEntity {
     required this.pathRanking,
   });
 
+  /// Student.id — صار متوفر حديثاً بـ GET /students/info (id) بعد ما
+  /// عدّل الباك ايند. هاد بالضبط الرقم يلي كان ناقص لربط
+  /// GET /students/{id}/recitation-history وGET /students/{id}/next-session
+  /// من جانب الطالبة نفسها.
+  final int id;
   final String fullName;
   final int goal;
   final String path;

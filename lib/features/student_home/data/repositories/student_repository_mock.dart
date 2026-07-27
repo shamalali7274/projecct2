@@ -6,6 +6,7 @@ class StudentRepositoryMock implements StudentRepository {
   Future<StudentDashboardEntity> getDashboard() async {
     await Future.delayed(const Duration(milliseconds: 600));
     return const StudentDashboardEntity(
+      id: 1,
       fullName: 'نورة العتيبي',
       goal: 20,
       path: 'أترجة',

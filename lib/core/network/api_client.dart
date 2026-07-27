@@ -183,6 +183,27 @@ class ApiClient {
     }
   }
 
+  /// PATCH — لازم ميثود منفصل عن put()، لأنو Laravel بيفرّق بدقة بين
+  /// PUT وPATCH بتعريف الراوت (Route::patch مثلاً)، وطلب PUT لراوت
+  /// معرّف PATCH بيرجع 405 Method Not Allowed.
+  Future<Response> patch(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      return await dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<Response> delete(
     String path, {
     Map<String, dynamic>? data,

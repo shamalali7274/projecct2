@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 /// Endpoints مؤكدة من StudentsController الفعلي بالباك اند:
-///   GET /students/info                         -> { full_name, goal, path, college }
+///   GET /students/info                         -> { id, full_name, goal, path, college }
 ///   GET /students/achievement_relation_to_goal  -> { achievement, goal }
 ///   GET /students/ranking                       -> { ranking }
 ///   GET /students/college-ranking                -> { college_ranking }
@@ -36,6 +36,7 @@ class StudentRepositoryImpl implements StudentRepository {
       final pathRanking = responses[4].data as Map<String, dynamic>;
 
       return StudentDashboardEntity(
+        id: (info['id'] as num?)?.toInt() ?? 0,
         fullName: info['full_name'] as String? ?? '',
         goal: (info['goal'] as num?)?.toInt() ?? 0,
         path: info['path'] as String? ?? '',

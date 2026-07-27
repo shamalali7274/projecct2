@@ -239,6 +239,7 @@ class _DashboardViewState extends State<_DashboardView> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => StudentDetailPage(
+          studentId: int.parse(student.id),
           studentName: student.name,
           avatarUrl: student.avatarUrl,
           currentJuz: 'الجزء ${student.completedParts.round()}',
@@ -298,7 +299,7 @@ class _DashboardViewState extends State<_DashboardView> {
         avatarUrl:
         '',
         actions: [
-          AppTopBarAction(icon: Icons.search, onTap: () {}),
+          AppTopBarAction(icon: Icons.search, onTap: _openStudentsList),
           AppTopBarAction(icon: Icons.notifications_none, onTap: () {}),
         ],
         trailing: const ThemeToggleButton(),
@@ -348,7 +349,15 @@ class _DashboardViewState extends State<_DashboardView> {
                 const SizedBox(height: AppSpacing.xxl),
                 _buildStatsSection(context, loaded.stats),
                 const SizedBox(height: AppSpacing.xxl),
-                AppSearchField(hintText: 'ابحثي عن طالبة بالاسم أو رقم العضوية', onFilterTap: () {}),
+                GestureDetector(
+                  onTap: _openStudentsList,
+                  child: AbsorbPointer(
+                    child: AppSearchField(
+                      hintText: 'ابحثي عن طالبة بالاسم أو رقم العضوية',
+                      onFilterTap: _openStudentsList,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xxl),
                 _buildSectionHeader(context),
                 const SizedBox(height: AppSpacing.lg),
@@ -359,7 +368,11 @@ class _DashboardViewState extends State<_DashboardView> {
                       student: entry.value,
                       tile: pastelTileForIndex(entry.key),
                       onTap: () => _openStudentDetail(entry.value),
-                      onStartRecitation: () => startRecitationSession(context, entry.value.name),
+                      onStartRecitation: () => startRecitationSession(
+                        context,
+                        studentId: int.parse(entry.value.id),
+                        studentName: entry.value.name,
+                      ),
                     ),
                   ),
                 ),

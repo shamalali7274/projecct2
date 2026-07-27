@@ -70,7 +70,10 @@ class AuthCubit extends Cubit<AuthState> {
   /// أصلاً أو ما في اتصال، لازم تنسجل الأنسة خروج محلياً).
   Future<void> logout() async {
     try {
-      await ApiClient.instance.post(AppConfig.logoutPath);
+      // AuthController@logout بالباك ايند مربوط بـ Route::get('logout', ...)
+      // يعني GET مو POST — لو تركناها POST كانت رح ترجع 405 Method Not
+      // Allowed وما توصل أبداً، فيضل التوكن شغال بجانب السيرفر.
+      await ApiClient.instance.get(AppConfig.logoutPath);
     } catch (_) {
       // تجاهل أي خطأ شبكة/سيرفر هون: تسجيل الخروج المحلي لازم يصير
       // دايماً، حتى لو فشل استدعاء الباك ايند.

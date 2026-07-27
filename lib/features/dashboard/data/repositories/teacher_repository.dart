@@ -1,4 +1,5 @@
 
+import 'package:flutter/material.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/dashboard_stats_entity.dart';
@@ -15,11 +16,41 @@ class TeacherRepository {
 
   final ApiClient _apiClient;
 
+  /// لا يوجد بالباك ايند أي endpoint يرجّع "معرّف الأنسة الحالية"
+  /// (Teacher.id) مباشرة من التوكن — بس هاد الرقم موجود جاهز بأي
+  /// طالبة تابعة لها (عمود teacher_id الخام بجدول students). فمنخزّنه
+  /// أول ما توصل أي استجابة فيها طالبة وحدة ع الأقل، ومنعيد استخدامه
+  /// لاحقاً (مثلاً عند إنشاء جلسة تسميع) بدل ما نطلبه من كل صفحة.
+  static int? _cachedTeacherId;
+
+  void _cacheTeacherIdFrom(List<StudentModel> students) {
+    if (_cachedTeacherId != null) return;
+    for (final student in students) {
+      if (student.teacherId != null) {
+        _cachedTeacherId = student.teacherId;
+        return;
+      }
+    }
+  }
+
+  /// يرجّع Teacher.id الحالي (من الكاش لو موجود، وإلا يجيب قائمة
+  /// الطالبات مرة عشان يستخرجه منها).
+  Future<int?> getMyTeacherId() async {
+    if (_cachedTeacherId != null) return _cachedTeacherId;
+    final students = await getStudents();
+    _cacheTeacherIdFrom(students);
+    return _cachedTeacherId;
+  }
+
   Future<List<StudentModel>> getStudents() async {
     final response = await _apiClient.get(AppConfig.teacherStudentsPath);
     final data = response.data as Map<String, dynamic>;
     final list = (data['students'] as List<dynamic>?) ?? const [];
-    return list.map((json) => StudentModel.fromJson(json as Map<String, dynamic>)).toList();
+    final students = list
+        .map((json) => StudentModel.fromJson(json as Map<String, dynamic>))
+        .toList();
+    _cacheTeacherIdFrom(students);
+    return students;
   }
 
   Future<int> getStudentsCount() async {
@@ -41,9 +72,56 @@ class TeacherRepository {
   }
 
   /// TeachersController@searchStudentById → GET /teacher/student/{id}
-  Future<Map<String, dynamic>> getStudentById(int id) async {
-    final response = await _apiClient.get('${AppConfig.teacherStudentByIdPath}/$id');
-    return response.data as Map<String, dynamic>;
+  /// الشكل هون مختلف عن getStudents/getStudentByName (بدون 'achievement'
+  /// ولا 'college' ولا صورة — بس بيانات تعريفية + الهدف)، فمنبنيها StudentModel
+  /// يدوياً بالحقول المتوفرة فقط بدل تعديل StudentModel.fromJson العام.
+  Future<StudentModel?> getStudentById(int id) async {
+    try {
+      final response = await _apiClient.get('${AppConfig.teacherStudentByIdPath}/$id');
+      final json = response.data as Map<String, dynamic>;
+      final firstName = (json['first_name'] as String?)?.trim() ?? '';
+      final lastName = (json['last_name'] as String?)?.trim() ?? '';
+      final name = [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
+
+      return StudentModel(
+        id: json['id'].toString(),
+        name: name.isEmpty ? 'بدون اسم' : name,
+        membershipId: 'MLT-${json['id']}',
+        college: '', // هاد الـ endpoint ما بيرجع الكلية
+        avatarUrl: '',
+        completedParts: 0, // ولا الإنجاز الحالي (مش موجود بهاد الـ endpoint)
+        totalParts: (json['goal'] as num?)?.toDouble() ?? 0,
+        lastAchievementLabel: 'الهدف: ${json['goal'] ?? 0} جزء',
+        badgeIcon: Icons.verified,
+      );
+    } on Exception catch (e) {
+      if (e.toString().contains('404')) return null;
+      rethrow;
+    }
+  }
+
+  /// TeachersController@getStudentByName → POST /teachers/students/name
+  /// بترجع {first_name, full_name, student} أو 404 لو ما لقت تطابق.
+  Future<StudentModel?> getStudentByName(String name) async {
+    try {
+      final response = await _apiClient.post(
+        AppConfig.teacherStudentByNamePath,
+        data: {'name': name},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final studentJson = data['student'] as Map<String, dynamic>;
+      // الباك ايند هون بيرجّع full_name بمستوى الـ response العلوي
+      // مو جوا كائن الطالبة نفسه (بعكس getStudents) — منحقنها جوا
+      // studentJson قبل التحويل حتى يشتغل StudentModel.fromJson بنفس
+      // منطق قراءة full_name المستخدم بكل مكان تاني.
+      studentJson['full_name'] = data['full_name'];
+      final student = StudentModel.fromJson(studentJson);
+      _cacheTeacherIdFrom([student]);
+      return student;
+    } on Exception catch (e) {
+      if (e.toString().contains('404')) return null;
+      rethrow;
+    }
   }
 
   Future<TeacherDashboardData> loadDashboard() async {

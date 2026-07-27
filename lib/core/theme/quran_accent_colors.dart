@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// القرآني لتمييز أنواع الملاحظات (تجويد صحيح/خطأ/نسيان/ملاحظة عامة).
 /// الألوان هنا تظليل دلالي فقط (Semantic) ولا تُغيّر هوية التطبيق —
 /// باقي صفحة القرآن تستخدم AppColors العادية بنفس روح المشروع.
-enum WordHighlightColor { none, green, red, blue, brown }
+enum WordHighlightColor { none, green, red, blue, yellow }
 
 extension WordHighlightColorX on WordHighlightColor {
   Color background(BuildContext context) {
@@ -18,7 +18,7 @@ extension WordHighlightColorX on WordHighlightColor {
         return isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
       case WordHighlightColor.blue:
         return isDark ? const Color(0xFF1E3A5F) : const Color(0xFFDBEAFE);
-      case WordHighlightColor.brown:
+      case WordHighlightColor.yellow:
         return isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7);
     }
   }
@@ -33,7 +33,7 @@ extension WordHighlightColorX on WordHighlightColor {
         return 'خطأ';
       case WordHighlightColor.blue:
         return 'نسيان / تلعثم';
-      case WordHighlightColor.brown:
+      case WordHighlightColor.yellow:
         return 'ملاحظة';
     }
   }

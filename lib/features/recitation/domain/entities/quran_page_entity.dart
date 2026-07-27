@@ -1,12 +1,27 @@
-import 'quran_word_entity.dart';
+import 'quran_line_entity.dart';
 
-/// صفحة واحدة من صفحات المصحف ضمن إنجاز/تسميع معيّن — نصّها مقسّم
-/// لكلمات (QuranWordEntity) وكل كلمة معها لون التظليل اللي حطّته
-/// الأنسة وقت التسميع الفعلي. هاي البيانات تُقرأ فقط بجانب الطالبة
-/// (read-only) — التعديل عليها من صلاحية الأنسة حصراً.
+/// صفحة واحدة من صفحات المصحف بأسطرها الحقيقية (QuranPageService)،
+/// جزء من جلسة تسميع (RecitationSessionEntity) واحدة قد تمتد لأكتر
+/// من صفحة (from_page → to_page).
 class QuranPageEntity {
-  const QuranPageEntity({required this.pageNumber, required this.words});
+  const QuranPageEntity({required this.pageNumber, required this.lines});
 
   final int pageNumber;
-  final List<QuranWordEntity> words;
+  final List<QuranLineEntity> lines;
+
+  /// يبني قائمة صفحات مرتبة من استجابة GET /students/{id}/next-session
+  /// اللي شكلها { "293": [line, line, ...], "294": [...] } — مفاتيح
+  /// الـ Map هون أرقام الصفحات كنص (JSON keys دايماً نصوص).
+  static List<QuranPageEntity> listFromPagesJson(Map<String, dynamic> pagesJson) {
+    final pageNumbers = pagesJson.keys.map(int.parse).toList()..sort();
+    return pageNumbers.map((pageNumber) {
+      final linesJson = (pagesJson[pageNumber.toString()] as List<dynamic>?) ?? const [];
+      return QuranPageEntity(
+        pageNumber: pageNumber,
+        lines: linesJson
+            .map((l) => QuranLineEntity.fromJson(l as Map<String, dynamic>))
+            .toList(),
+      );
+    }).toList();
+  }
 }
