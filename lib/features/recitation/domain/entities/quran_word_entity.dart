@@ -21,6 +21,18 @@ class QuranWordEntity {
       ayah: (json['ayah'] as num).toInt(),
       position: (json['position'] as num?)?.toInt() ?? 0,
       text: json['text'] as String? ?? '',
+      // error_type يجي فقط من GET/POST اللي فيهم أخطاء محفوظة فعلاً
+      // (متل /recitation-sessions/show)؛ null = بدون تظليل (نفس
+      // سلوك /next-session يلي أصلاً ما بيرجع error_type إطلاقاً).
+      highlight: _highlightFromErrorType(json['error_type'] as String?),
+    );
+  }
+
+  static WordHighlightColor _highlightFromErrorType(String? errorType) {
+    if (errorType == null) return WordHighlightColor.none;
+    return WordHighlightColor.values.firstWhere(
+      (c) => c.name == errorType,
+      orElse: () => WordHighlightColor.none,
     );
   }
 

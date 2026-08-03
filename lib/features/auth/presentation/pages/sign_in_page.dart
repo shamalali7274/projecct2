@@ -384,7 +384,7 @@ class _SignInViewState extends State<_SignInView> {
                       ShakeableField(
                         key: _numberFieldKey,
                         child: AppTextField(
-                          label: 'رقم الطالبة',
+                          label:'رقم الهاتف',
                           hintText: '09xxxxxxxx',
                           icon: Icons.call_outlined,
                           controller: _numberController,

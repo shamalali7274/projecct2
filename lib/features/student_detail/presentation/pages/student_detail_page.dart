@@ -90,11 +90,15 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
       floatingActionButton: AppFab(
         label: 'بدء التسميع',
         icon: Icons.mic_none_rounded,
-        onPressed: () => startRecitationSession(
-          context,
-          studentId: widget.studentId,
-          studentName: widget.studentName,
-        ),
+        onPressed: () async {
+          
+          await startRecitationSession(
+            context,
+            studentId: widget.studentId,
+            studentName: widget.studentName,
+          );
+          if (mounted) _loadHistory();
+        },
       ),
       body: RefreshIndicator(
         onRefresh: _loadHistory,

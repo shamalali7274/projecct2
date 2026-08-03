@@ -35,7 +35,7 @@ class AppConfig {
       '/students/achievement_relation_to_goal';
 
   // ══════════════════ RecitationSessionController ══════════════════
-  static const String recitationSessionsPath = '/recitation-sessions';
+  static const String recitationSessionsPath = '/recitation-sessions/store';
   static String studentNextSessionPath(int studentId) => '/students/$studentId/next-session';
   static String recitationSessionErrorsPath(int sessionId) =>
       '/recitation-sessions/$sessionId/errors';
@@ -43,4 +43,9 @@ class AppConfig {
       '/recitation-sessions/$sessionId/status';
   static String studentRecitationHistoryPath(int studentId) =>
       '/students/$studentId/recitation-history';
+
+  // POST /recitation-sessions/show — body: {'recitation_session_id': id}
+  // بيرجع صفحات المصحف الخاصة بجلسة تسميع معينة مع error_type لكل
+  // كلمة (مبني على RecitationSessionController@show).
+  static const String recitationSessionShowPath = '/recitation-sessions/show';
 }

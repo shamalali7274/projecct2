@@ -9,16 +9,16 @@ import '../../../recitation/domain/entities/quran_page_entity.dart';
 import '../../../recitation/presentation/widgets/highlightable_word.dart';
 
 /// صفحة مراجعة تسميع الطالبة — نفس شكل صفحة المصحف عند الأنسة
-/// (بطاقة مرفوعة + بسملة + نص ملوّن) بس بوضع "عرض فقط" بالكامل:
-/// الكلمات هون مبنية بـ readOnly:true فـ HighlightableWord، فما
-/// فيه إمكانية إنو الطالبة تلمس/تبدّل أي تلوين حطّته الأنسة.
+/// تماماً (بطاقة مرفوعة + بسملة + نص ملوّن)، بما فيها أسلوب العرض:
+/// كل صفحات التسميع تحت بعضها بسكرول متواصل واحد (SingleChildScrollView)
+/// بدل التنقل بالسحب صفحة-صفحة، بس بوضع "عرض فقط" بالكامل هون:
+/// الكلمات مبنية بـ readOnly:true فـ HighlightableWord، فما فيه
+/// إمكانية إنو الطالبة تلمس/تبدّل أي تلوين حطّته الأنسة.
 ///
-/// إذا كان التسميع (الإنجاز) بمتضمن أكتر من صفحة مصحف، بتقدر
-/// الطالبة تتنقل بينهم بالسحب (PageView) + مؤشر صفحات بالأسفل.
-/// وتحت البطاقة مباشرة، فيه "دليل الألوان" يشرح معنى كل لون —
-/// مبني آلياً من enum WordHighlightColor نفسه (نفس المصدر يلي
-/// الأنسة تستخدمه وقت التسميع) بدل ما نكرر النصوص يدوياً.
-class StudentRecitationReviewPage extends StatefulWidget {
+/// تحت آخر بطاقة، فيه "دليل الألوان" يشرح معنى كل لون — مبني آلياً
+/// من enum WordHighlightColor نفسه (نفس المصدر يلي الأنسة تستخدمه
+/// وقت التسميع) بدل ما نكرر النصوص يدوياً.
+class StudentRecitationReviewPage extends StatelessWidget {
   const StudentRecitationReviewPage({
     super.key,
     required this.title,
@@ -32,80 +32,47 @@ class StudentRecitationReviewPage extends StatefulWidget {
   final List<QuranPageEntity> pages;
 
   @override
-  State<StudentRecitationReviewPage> createState() => _StudentRecitationReviewPageState();
-}
-
-class _StudentRecitationReviewPageState extends State<StudentRecitationReviewPage> {
-  late final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final hasMultiplePages = widget.pages.length > 1;
+    final hasMultiplePages = pages.length > 1;
 
     return Scaffold(
       appBar: AppTopBar(
-        title: widget.title,
-        subtitle: hasMultiplePages
-            ? 'صفحة ${widget.pages[_currentPage].pageNumber} '
-                '(${_currentPage + 1} من ${widget.pages.length})'
-            : 'صفحة ${widget.pages.first.pageNumber}',
+        title: title,
+        subtitle: pages.isEmpty
+            ? ''
+            : hasMultiplePages
+                ? 'صفحة ${pages.first.pageNumber} - ${pages.last.pageNumber}'
+                : 'صفحة ${pages.first.pageNumber}',
         avatarUrl: '',
         trailing: const ThemeToggleButton(),
       ),
-      body: widget.pages.isEmpty
+      body: pages.isEmpty
           ? const Center(child: Text('لا يوجد نص مصحف مرتبط بهذا التسميع بعد'))
           : Column(
               children: [
                 Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    reverse: true, // تصفّح من اليمين لليسار بانسجام مع اتجاه المصحف
-                    itemCount: widget.pages.length,
-                    onPageChanged: (i) => setState(() => _currentPage = i),
-                    itemBuilder: (context, index) => SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: _QuranPageCard(page: widget.pages[index]),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < pages.length; i++)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              bottom: i == pages.length - 1 ? 0 : AppSpacing.lg,
+                            ),
+                            child: _QuranPageCard(page: pages[i], showBasmala: i == 0),
+                          ),
+                      ],
                     ),
                   ),
                 ),
-                if (hasMultiplePages) _buildPageIndicator(context),
                 _buildColorLegend(context),
               ],
             ),
     );
   }
 
-  Widget _buildPageIndicator(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(widget.pages.length, (i) {
-          final isActive = i == _currentPage;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: isActive ? 20 : 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: isActive ? scheme.primary : scheme.outlineVariant,
-              borderRadius: BorderRadius.circular(AppRadius.full),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  /// دليل الألوان أسفل صفحة القرآن — يشرح للطالبة معنى كل لون
+  /// دليل الألوان أسفل صفحات القرآن — يشرح للطالبة معنى كل لون
   /// ظللت فيه الأنسة كلماتها وقت التسميع. مبني من WordHighlightColor
   /// نفسه (استثناء "بدون تظليل") بدل تكرار الأسماء والألوان يدوياً.
   Widget _buildColorLegend(BuildContext context) {
@@ -144,9 +111,14 @@ class _StudentRecitationReviewPageState extends State<StudentRecitationReviewPag
 }
 
 class _QuranPageCard extends StatelessWidget {
-  const _QuranPageCard({required this.page});
+  const _QuranPageCard({required this.page, required this.showBasmala});
 
   final QuranPageEntity page;
+
+  /// true بس للصفحة الأولى بالتسميع (مهما كانت أكتر من صفحة) —
+  /// بنفس منطق pageIndex == 0 المستخدم بصفحة الآنسة (quran_recitation_page.dart)،
+  /// حتى ما تتكرر البسملة بأول كل صفحة تانية.
+  final bool showBasmala;
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +128,10 @@ class _QuranPageCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
       child: Column(
         children: [
-          _buildBasmalaPill(context, scheme),
-          const SizedBox(height: AppSpacing.xl),
+          if (showBasmala) ...[
+            _buildBasmalaPill(context, scheme),
+            const SizedBox(height: AppSpacing.xl),
+          ],
           for (final line in page.lines)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),

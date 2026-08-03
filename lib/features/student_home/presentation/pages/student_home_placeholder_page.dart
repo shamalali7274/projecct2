@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/circular_progress_ring.dart';
 import '../../../../core/widgets/stat_info_card.dart';
 import '../../../../core/widgets/theme_toggle_button.dart';
+import '../../../recitation/data/repositories/recitation_repository.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../student_recitations/presentation/pages/my_recitations_page.dart';
 import '../cubit/student_dashboard_cubit.dart';
@@ -426,11 +427,69 @@ class _ActivityHeatmapCard extends StatelessWidget {
   }
 }
 
-/// فورم تسجيل ورد اليوم — واجهة فقط حالياً. ما في ضمن الـ 5 endpoints
-/// يلي بعتيتيهم أي API لحفظ ورد جديد، لهيك الزر معطّل مع رسالة توضيحية
-/// بدل ما يبعث request لمكان مش موجود.
-class _LogProgressCard extends StatelessWidget {
+/// فورم تسجيل ورد اليوم — مربوط فعلياً بـ POST /recitation-sessions
+/// (RecitationRepository.logDailyWird). الحقول هون "من صفحة" و"إلى
+/// صفحة" مباشرة (مطابقة لـ from_page/to_page يلي الباك ايند بيطلبهم)
+/// بدل "الجزء/الصفحات" القديمة، حتى ما يصير تحويل وسيط ممكن يغلط.
+class _LogProgressCard extends StatefulWidget {
   const _LogProgressCard();
+
+  @override
+  State<_LogProgressCard> createState() => _LogProgressCardState();
+}
+
+class _LogProgressCardState extends State<_LogProgressCard> {
+  final _repository = RecitationRepository();
+  final _fromPageController = TextEditingController();
+  final _toPageController = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _fromPageController.dispose();
+    _toPageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final fromPage = int.tryParse(_fromPageController.text.trim());
+    final toPage = int.tryParse(_toPageController.text.trim());
+
+    if (fromPage == null || toPage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء إدخال رقمي الصفحتين')),
+      );
+      return;
+    }
+    if (fromPage < 1 || toPage < 1 || toPage < fromPage) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('صفحة النهاية يجب أن تكون أكبر من أو تساوي صفحة البداية'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      await _repository.logDailyWird(fromPage: fromPage, toPage: toPage);
+      if (!mounted) return;
+      _fromPageController.clear();
+      _toPageController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تسجيل الورد بنجاح، بارك الله فيكِ 🌿')),
+      );
+      // نحدّث لوحة الطالبة (الترتيب/الإنجاز) بعد تسجيل ورد جديد.
+      await context.read<StudentDashboardCubit>().load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذّر تسجيل الورد: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -441,33 +500,35 @@ class _LogProgressCard extends StatelessWidget {
         children: [
           Text('تسجيل ورد اليوم', style: textTheme.titleMedium),
           const SizedBox(height: AppSpacing.lg),
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: TextField(
+                  controller: _fromPageController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: 'الجزء'),
+                  decoration: const InputDecoration(labelText: 'من صفحة'),
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: TextField(
+                  controller: _toPageController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: 'الصفحات'),
+                  decoration: const InputDecoration(labelText: 'إلى صفحة'),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
           FilledButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('هاي الميزة لسا بدون API — قريباً إن شاء الله'),
-                ),
-              );
-            },
-            child: const Text('تحديث السجل'),
+            onPressed: _submitting ? null : _submit,
+            child: _submitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('تحديث السجل'),
           ),
         ],
       ),

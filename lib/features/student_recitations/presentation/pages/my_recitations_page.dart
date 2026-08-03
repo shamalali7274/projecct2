@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/bloc/request_status.dart';
+import '../../../../core/navigation/page_transitions.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_top_bar.dart';
@@ -14,6 +15,7 @@ import '../../../student_detail/presentation/widgets/achievement_timeline_tile.d
 import '../../../student_home/domain/enities/student_dashboard_entity.dart';
 import '../../../student_home/presentation/cubit/student_dashboard_cubit.dart';
 import '../../../student_home/presentation/cubit/student_dashboard_state.dart';
+import 'student_recitation_review_page.dart';
 
 /// صفحة "تسميعاتي" — ملخص إنجاز حقيقي (الإنجاز/الهدف + الترتيب) من
 /// نفس الـ 5 endpoints المستخدمة أصلاً بلوحة الطالبة الرئيسية، وتحته
@@ -101,6 +103,34 @@ class _MyRecitationsBodyState extends State<_MyRecitationsBody> {
   void initState() {
     super.initState();
     _loadHistory();
+  }
+
+  /// تُستدعى عند الضغط على أي تسميع بالسجل — بتجيب صفحات المصحف
+  /// الخاصة فيه (مع تظليل الأخطاء يلي حطّتها الأنسة، إن وجدت) لحظياً
+  /// من الباك ايند، وبعدين بتفتح صفحة المراجعة بوضع عرض فقط.
+  Future<void> _openReview(AchievementEntity achievement) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final pages = await _repository.getSessionReview(int.parse(achievement.id));
+      if (!mounted) return;
+      Navigator.of(context).pop(); // يسكر مؤشر التحميل
+
+      AppNavigator.pushSharedAxis(
+        context,
+        StudentRecitationReviewPage(title: achievement.title, pages: pages),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذّر تحميل صفحات هذا التسميع: $e')),
+      );
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -212,6 +242,7 @@ class _MyRecitationsBodyState extends State<_MyRecitationsBody> {
               AchievementTimelineTile(
                 achievement: _achievements[i],
                 isLast: i == _achievements.length - 1,
+                onTap: () => _openReview(_achievements[i]),
               ),
           ],
         );
