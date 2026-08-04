@@ -5,8 +5,10 @@ import '../../../../core/theme/quran_accent_colors.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/theme_toggle_button.dart';
+import '../../../recitation/domain/entities/mawdi_entity.dart';
 import '../../../recitation/domain/entities/quran_page_entity.dart';
 import '../../../recitation/presentation/widgets/highlightable_word.dart';
+import '../../../recitation/presentation/widgets/mawdi_card.dart';
 
 /// صفحة مراجعة تسميع الطالبة — نفس شكل صفحة المصحف عند الأنسة
 /// تماماً (بطاقة مرفوعة + بسملة + نص ملوّن)، بما فيها أسلوب العرض:
@@ -23,6 +25,7 @@ class StudentRecitationReviewPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.pages,
+    this.mawadiByPage = const {},
   });
 
   /// عنوان التسميع (اسم السورة/الإنجاز) يظهر بالشريط العلوي.
@@ -30,6 +33,11 @@ class StudentRecitationReviewPage extends StatelessWidget {
 
   /// صفحات المصحف الخاصة بهاد التسميع بالضبط (بترتيبها).
   final List<QuranPageEntity> pages;
+
+  /// مواضع "التبيان المفصل" المستخرجة من الـ OCR، مفتاحها رقم الصفحة —
+  /// تُعرض كبطاقة إضافية تحت كل صفحة ليها أخطاء حمرا مرتبطة بموضع.
+  /// افتراضياً فاضية (توافقاً مع أي استدعاء قديم للصفحة قبل هالإضافة).
+  final Map<int, List<MawdiEntity>> mawadiByPage;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +68,16 @@ class StudentRecitationReviewPage extends StatelessWidget {
                             padding: EdgeInsets.only(
                               bottom: i == pages.length - 1 ? 0 : AppSpacing.lg,
                             ),
-                            child: _QuranPageCard(page: pages[i], showBasmala: i == 0),
+                            child: Column(
+                              children: [
+                                _QuranPageCard(page: pages[i], showBasmala: i == 0),
+                                for (final mawdi in mawadiByPage[pages[i].pageNumber] ?? const [])
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: AppSpacing.md),
+                                    child: MawdiCard(mawdi: mawdi),
+                                  ),
+                              ],
+                            ),
                           ),
                       ],
                     ),

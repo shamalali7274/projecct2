@@ -116,13 +116,17 @@ class _MyRecitationsBodyState extends State<_MyRecitationsBody> {
     );
 
     try {
-      final pages = await _repository.getSessionReview(int.parse(achievement.id));
+      final review = await _repository.getSessionReview(int.parse(achievement.id));
       if (!mounted) return;
       Navigator.of(context).pop(); // يسكر مؤشر التحميل
 
       AppNavigator.pushSharedAxis(
         context,
-        StudentRecitationReviewPage(title: achievement.title, pages: pages),
+        StudentRecitationReviewPage(
+          title: achievement.title,
+          pages: review.pages,
+          mawadiByPage: review.mawadiByPage,
+        ),
       );
     } catch (e) {
       if (!mounted) return;

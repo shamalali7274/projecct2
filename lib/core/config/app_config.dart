@@ -4,7 +4,7 @@ class AppConfig {
   AppConfig._();
   static String get laravelBaseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000/api';
-    return 'http://192.168.1.102:8000/api';
+    return 'http://192.168.1.104:8000/api';
   }
 
   // static const String laravelBaseUrl = 'http://127.0.0.1:8000/api';

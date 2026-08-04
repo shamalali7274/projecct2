@@ -127,6 +127,7 @@
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
+import '../../domain/entities/mawdi_entity.dart';
 import '../../domain/entities/quran_page_entity.dart';
 import '../../domain/entities/recitation_error_entity.dart';
 import '../../domain/entities/recitation_session_entity.dart';
@@ -137,6 +138,18 @@ class NextSessionResult {
   const NextSessionResult({required this.session, required this.pages});
   final RecitationSessionEntity session;
   final List<QuranPageEntity> pages;
+}
+
+/// نتيجة POST /recitation-sessions/show: صفحات التسميع + مواضع
+/// "التبيان المفصل" المرتبطة بكل صفحة (mawadi_by_page)، منفصلة عن
+/// pages عمداً — الصفحة نفسها (quran_words) شي، والموضع المستخرج من
+/// كتاب خارجي عبر الـ OCR شي تاني، وربطهم برقم الصفحة كفتاح Map هو
+/// اللي بيسمح للواجهة تعرض كل موضع تحت صفحته مباشرة بلا أي منطق
+/// مطابقة إضافي بجانب العرض.
+class SessionReviewResult {
+  const SessionReviewResult({required this.pages, required this.mawadiByPage});
+  final List<QuranPageEntity> pages;
+  final Map<int, List<MawdiEntity>> mawadiByPage;
 }
 
 /// طبقة الوصول الكاملة لـ RecitationSessionController بالباك ايند —
@@ -215,14 +228,21 @@ class RecitationRepository {
 
   /// POST /recitation-sessions/show — صفحات المصحف الخاصة بتسميع
   /// معيّن (session بالماضي أو الحاضر)، مع error_type لكل كلمة إذا
-  /// كانت الأنسة سجّلت أخطاء عليها وقت التسميع. تُستخدم بصفحة
+  /// كانت الأنسة سجّلت أخطاء عليها وقت التسميع، بالإضافة لـ
+  /// mawadi_by_page (مواضع "التبيان المفصل" المرتبطة بالأخطاء الحمرا
+  /// فقط، عبر جدول word_colors بالباك ايند). تُستخدم بصفحة
   /// "تسميعاتي" عند الطالبة (مراجعة تسميع سابق بوضع readOnly).
-  Future<List<QuranPageEntity>> getSessionReview(int sessionId) async {
+  Future<SessionReviewResult> getSessionReview(int sessionId) async {
     final response = await _apiClient.post(
       AppConfig.recitationSessionShowPath,
       data: {'recitation_session_id': sessionId},
     );
     final data = response.data as Map<String, dynamic>;
-    return QuranPageEntity.listFromPagesJson(data['pages'] as Map<String, dynamic>);
+    return SessionReviewResult(
+      pages: QuranPageEntity.listFromPagesJson(data['pages'] as Map<String, dynamic>),
+      // مفتاح غايب بالكامل لو الباك ايند القديم (قبل رفع التعديل)
+      // لسا شغال، أو لو الجلسة ما فيها ولا خطأ أحمر مرتبط بموضع.
+      mawadiByPage: MawdiEntity.mapFromJson(data['mawadi_by_page'] as Map<String, dynamic>?),
+    );
   }
 }
