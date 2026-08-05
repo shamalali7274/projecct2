@@ -9,6 +9,7 @@ class RecitationSessionEntity {
     required this.status,
     this.scheduledDate,
     this.reviewedAt,
+    this.isSmartReview = false,
   });
 
   factory RecitationSessionEntity.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,16 @@ class RecitationSessionEntity {
       status: json['status'] as String? ?? 'upcoming',
       scheduledDate: json['scheduled_date'] as String?,
       reviewedAt: json['reviewed_at'] as String?,
+      // غايب بالكامل لو الباك ايند القديم (قبل إضافة عمود
+      // is_smart_review) لسا شغال - يعتبر تسميع عادي بشكل افتراضي.
+      // تحمّل bool أو int (1/0) - MySQL أحياناً بيرجع tinyint كـ int
+      // بالـ JSON لو الموديل ما فيه cast صريح لـ boolean، فما بنكسر
+      // الشاشة كاملة إذا صار هيك بالمستقبل بحقل جديد مشابه.
+      isSmartReview: switch (json['is_smart_review']) {
+        bool v => v,
+        int v => v != 0,
+        _ => false,
+      },
     );
   }
 
@@ -30,6 +41,7 @@ class RecitationSessionEntity {
   final String status;
   final String? scheduledDate;
   final String? reviewedAt;
+  final bool isSmartReview;
 
   String get statusLabel {
     switch (status) {

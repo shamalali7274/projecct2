@@ -114,6 +114,32 @@ class AchievementTimelineTile extends StatelessWidget {
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
+                        if (achievement.isSmartReview)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: PastelTile.lavender.background(context),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 12,
+                                  color: PastelTile.lavender.foreground(context),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  'سبر ذكي',
+                                  style: textTheme.labelSmall?.copyWith(
+                                    color: PastelTile.lavender.foreground(context),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(

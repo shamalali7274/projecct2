@@ -15,6 +15,8 @@ class AchievementEntity {
     required this.status,
     this.note,
     this.quranPages,
+    this.isSmartReview = false,
+    this.isUpcoming = false,
   });
 
   /// تحويل جلسة تسميع حقيقية (من RecitationSessionController@history أو
@@ -37,6 +39,8 @@ class AchievementEntity {
         _ => AchievementStatus.milestone,
       },
       quranPages: quranPages,
+      isSmartReview: session.isSmartReview,
+      isUpcoming: session.status == 'upcoming',
     );
   }
 
@@ -47,6 +51,16 @@ class AchievementEntity {
   final String statusLabel;
   final AchievementStatus status;
   final String? note;
+
+  /// true = هاد الإنجاز جلسة "سبر ذكي" بدأتها الأنسة (مو تسميع عادي
+  /// بدأته الطالبة) - نفس الجدول بالباك ايند بالضبط، بس عمود
+  /// is_smart_review يميّزها بالعرض فقط (شارة صغيرة بالبطاقة).
+  final bool isSmartReview;
+
+  /// true = الجلسة لسا "قادمة" (upcoming - ما تسمّعت/ما تقرّر مصيرها
+  /// بعد). ما في صفحات أخطاء مسجّلة لنعرضها بمراجعة، فبتنعطّل إمكانية
+  /// الضغط عليها بالسجل (نفس معاملة isSmartReview بالضبط).
+  final bool isUpcoming;
 
   /// صفحات المصحف الخاصة بهاد التسميع بالضبط، مع تظليل الأخطاء/الملاحظات
   /// يلي حطّتها الأنسة وقتها. null أو قائمة فاضية = هاد الإنجاز ما

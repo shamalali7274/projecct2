@@ -465,7 +465,13 @@ class _QuranRecitationPageState extends State<QuranRecitationPage> {
 
   void _handleAccepted() => _finishSession('accepted', 'تم تسجيل التسميع كمقبول');
   void _handleRejected() => _finishSession('rejected', 'تم تسجيل التسميع كغير مقبول');
-  void _handleCancelled() => _finishSession('excused', 'تم تسجيل الجلسة كمعذورة');
+
+  /// إلغاء = إغلاق فقط، ولا نداء للباك اند. الجلسة تضل upcoming كما
+  /// هي (نفس الطالبة نفسها أنشأتها)، فبتقدر الأنسة ترجع تفوت عليها
+  /// لاحقاً - GET next-session بيرجّعها نفسها لأنها لسا upcoming.
+  void _handleCancelled() {
+    if (mounted) Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {

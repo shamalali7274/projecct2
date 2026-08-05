@@ -4,7 +4,7 @@ class AppConfig {
   AppConfig._();
   static String get laravelBaseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000/api';
-    return 'http://192.168.1.104:8000/api';
+    return 'http://192.168.1.100:8000/api';
   }
 
   // static const String laravelBaseUrl = 'http://127.0.0.1:8000/api';
@@ -48,4 +48,14 @@ class AppConfig {
   // بيرجع صفحات المصحف الخاصة بجلسة تسميع معينة مع error_type لكل
   // كلمة (مبني على RecitationSessionController@show).
   static const String recitationSessionShowPath = '/recitation-sessions/show';
+
+  // DELETE /recitation-sessions/{id} — حذف نهائي (مش إلغاء/إعذار) لجلسة
+  // تسميع أو سبر ذكي، ما بترجع تظهر بالسجل إطلاقاً بعدها.
+  static String recitationSessionDeletePath(int sessionId) => '/recitation-sessions/$sessionId';
+
+  // ══════════════════ SmartRecitationController (السبر الذكي) ══════════════════
+  static const String smartRecitationSuggestPath = '/teacher/smart-recitation/suggest';
+  static const String smartRecitationSessionsPath = '/teacher/smart-recitation/sessions';
+  static String smartRecitationUpcomingPath(int studentId) =>
+      '/teacher/smart-recitation/students/$studentId/upcoming';
 }

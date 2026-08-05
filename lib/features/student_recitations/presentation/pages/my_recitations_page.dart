@@ -246,7 +246,13 @@ class _MyRecitationsBodyState extends State<_MyRecitationsBody> {
               AchievementTimelineTile(
                 achievement: _achievements[i],
                 isLast: i == _achievements.length - 1,
-                onTap: () => _openReview(_achievements[i]),
+                // السبر الذكي ما إله صفحة "مراجعة" بنفس منطق التسميع
+                // العادي، وكذلك الجلسات اللي لسا "قادمة" (upcoming)
+                // ما في فيها أخطاء مسجّلة بعد لنعرضها - فتعمّدنا تعطيل
+                // الضغط عليهم هون بدل ما يطيحوا بخطأ تحميل.
+                onTap: (_achievements[i].isSmartReview || _achievements[i].isUpcoming)
+                    ? null
+                    : () => _openReview(_achievements[i]),
               ),
           ],
         );

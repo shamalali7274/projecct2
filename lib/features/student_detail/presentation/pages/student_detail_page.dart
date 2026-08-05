@@ -7,6 +7,7 @@ import '../../../../core/widgets/islamic_hero_illustration.dart';
 import '../../../recitation/data/repositories/recitation_repository.dart';
 import '../../../recitation/domain/entities/recitation_session_entity.dart';
 import '../../../recitation/presentation/start_recitation.dart';
+import '../../../smart_recitation/presentation/start_smart_recitation.dart';
 import '../../domain/entities/achievement_entity.dart';
 import '../widgets/student_profile_header.dart';
 import '../widgets/achievement_timeline_tile.dart';
@@ -87,18 +88,35 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
         avatarUrl: widget.avatarUrl,
         trailing: const ThemeToggleButton(),
       ),
-      floatingActionButton: AppFab(
-        label: 'بدء التسميع',
-        icon: Icons.mic_none_rounded,
-        onPressed: () async {
-          
-          await startRecitationSession(
-            context,
-            studentId: widget.studentId,
-            studentName: widget.studentName,
-          );
-          if (mounted) _loadHistory();
-        },
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppFab(
+            label: 'سبر ذكي',
+            icon: Icons.auto_awesome,
+            onPressed: () async {
+              await startSmartRecitation(
+                context,
+                studentId: widget.studentId,
+                studentName: widget.studentName,
+              );
+              if (mounted) _loadHistory();
+            },
+          ),
+          const SizedBox(width: AppSpacing.md),
+          AppFab(
+            label: 'بدء التسميع',
+            icon: Icons.mic_none_rounded,
+            onPressed: () async {
+              await startRecitationSession(
+                context,
+                studentId: widget.studentId,
+                studentName: widget.studentName,
+              );
+              if (mounted) _loadHistory();
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadHistory,

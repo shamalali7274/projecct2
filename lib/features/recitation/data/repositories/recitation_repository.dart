@@ -216,6 +216,13 @@ class RecitationRepository {
     return RecitationSessionEntity.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// DELETE /recitation-sessions/{id} — حذف نهائي (مش إلغاء). تُستخدم
+  /// لما الأنسة تختار "حذف نهائياً" من حوار زر إلغاء، بالتسميع العادي
+  /// وبالسبر الذكي معاً (نفس جدول recitation_sessions بالضبط).
+  Future<void> deleteSession(int sessionId) async {
+    await _apiClient.delete(AppConfig.recitationSessionDeletePath(sessionId));
+  }
+
   /// GET /students/{id}/recitation-history — كل جلسات الطالبة (سجل
   /// إنجازاتها الكامل، مرتب من الأحدث للأقدم).
   Future<List<RecitationSessionEntity>> getHistory(int studentId) async {

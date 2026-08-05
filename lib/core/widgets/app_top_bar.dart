@@ -42,7 +42,15 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
         color: scheme.surface,
         border: Border(bottom: BorderSide(color: scheme.surfaceContainerLow, width: 1)),
       ),
-      child: SafeArea(
+      // نثبّت (clamp) مقياس خط النظام جوا البار بس، حتى لو المستخدم
+      // كبّر حجم الخط من إعدادات جهازه (Accessibility) ما ينكسر
+      // ارتفاع البار الثابت (preferredSize) على أي جهاز أو أي مقاس.
+      // باقي التطبيق برّا هاد البار بيضل يحترم إعداد المستخدم عادي.
+      child: MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(minScaleFactor: 0.9, maxScaleFactor: 1.1)),
+        child: SafeArea(
         bottom: false,
         child: Row(
           children: [
@@ -130,6 +138,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             if (trailing != null) trailing!,
           ],
+        ),
         ),
       ),
     );
