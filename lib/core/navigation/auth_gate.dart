@@ -6,6 +6,7 @@ import '../../features/auth/domain/entities/user_role.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/student_home/presentation/pages/student_home_placeholder_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/onboarding/presentation/pages/post_logout_welcome_page.dart';
 
 /// نقطة القرار الوحيدة لأي واجهة تُفتح بالتطبيق:
 /// - أثناء التحقق من الجلسة → شاشة تحميل.
@@ -42,7 +43,13 @@ class _AuthGateState extends State<AuthGate> {
               ? const DashboardPage()
               : const StudentHomePage();
         }
-        // AuthUnauthenticated أو AuthError
+        // AuthUnauthenticated بسبب تسجيل خروج فعلي من داخل التطبيق →
+        // شريحة "تسجيل الدخول" بس، بدون باقي شرائح الترحيب بالسلايدر.
+        if (state is AuthUnauthenticated && state.fromLogout) {
+          return const PostLogoutWelcomePage();
+        }
+        // AuthUnauthenticated (أول فتح، ما في جلسة أصلاً) أو AuthError
+        // → OnboardingPage بكامل شرائحه من البداية.
         return const OnboardingPage();
       },
     );

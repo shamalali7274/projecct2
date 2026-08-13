@@ -12,15 +12,22 @@ import '../../../recitation/presentation/widgets/mawdi_card.dart';
 
 /// صفحة مراجعة تسميع الطالبة — نفس شكل صفحة المصحف عند الأنسة
 /// تماماً (بطاقة مرفوعة + بسملة + نص ملوّن)، بما فيها أسلوب العرض:
-/// كل صفحات التسميع تحت بعضها بسكرول متواصل واحد (SingleChildScrollView)
-/// بدل التنقل بالسحب صفحة-صفحة، بس بوضع "عرض فقط" بالكامل هون:
-/// الكلمات مبنية بـ readOnly:true فـ HighlightableWord، فما فيه
-/// إمكانية إنو الطالبة تلمس/تبدّل أي تلوين حطّته الأنسة.
+/// كل صفحة تسميع تظهر لحالها بالكامل، وتتنقل الطالبة بينهم بالسحب
+/// (PageView) بدل ما تكون كل الصفحات تحت بعضها بسكرول متواصل واحد.
+/// بوضع "عرض فقط" بالكامل هون: الكلمات مبنية بـ readOnly:true فـ
+/// HighlightableWord، فما فيه إمكانية إنو الطالبة تلمس/تبدّل أي
+/// تلوين حطّته الأنسة.
 ///
-/// تحت آخر بطاقة، فيه "دليل الألوان" يشرح معنى كل لون — مبني آلياً
-/// من enum WordHighlightColor نفسه (نفس المصدر يلي الأنسة تستخدمه
-/// وقت التسميع) بدل ما نكرر النصوص يدوياً.
-class StudentRecitationReviewPage extends StatelessWidget {
+/// تحت كل صفحة، إذا كان فيها أخطاء (تظليل أحمر) مرتبطة بمواضع
+/// مفصّلة، بتظهر بطاقات "التبيان" (MawdiCard) الخاصة فيها هي بالذات
+/// — نفس الربط يلي كان موجود بالسكرول المتواصل، وبس منقول لتحت كل
+/// صفحة داخل الـ PageView.
+///
+/// تحت آخر بطاقة (بشكل ثابت، برا الـ PageView)، فيه "دليل الألوان"
+/// يشرح معنى كل لون — مبني آلياً من enum WordHighlightColor نفسه
+/// (نفس المصدر يلي الأنسة تستخدمه وقت التسميع) بدل ما نكرر النصوص
+/// يدوياً.
+class StudentRecitationReviewPage extends StatefulWidget {
   const StudentRecitationReviewPage({
     super.key,
     required this.title,
@@ -40,16 +47,31 @@ class StudentRecitationReviewPage extends StatelessWidget {
   final Map<int, List<MawdiEntity>> mawadiByPage;
 
   @override
+  State<StudentRecitationReviewPage> createState() => _StudentRecitationReviewPageState();
+}
+
+class _StudentRecitationReviewPageState extends State<StudentRecitationReviewPage> {
+  final PageController _pageController = PageController();
+  int _currentPageIndex = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final pages = widget.pages;
     final hasMultiplePages = pages.length > 1;
 
     return Scaffold(
       appBar: AppTopBar(
-        title: title,
+        title: widget.title,
         subtitle: pages.isEmpty
             ? ''
             : hasMultiplePages
-                ? 'صفحة ${pages.first.pageNumber} - ${pages.last.pageNumber}'
+                ? 'صفحة ${pages[_currentPageIndex].pageNumber} (${_currentPageIndex + 1} من ${pages.length})'
                 : 'صفحة ${pages.first.pageNumber}',
         avatarUrl: '',
         trailing: const ThemeToggleButton(),
@@ -59,33 +81,58 @@ class StudentRecitationReviewPage extends StatelessWidget {
           : Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      children: [
-                        for (int i = 0; i < pages.length; i++)
-                          Padding(
-                            padding: EdgeInsets.only(
-                              bottom: i == pages.length - 1 ? 0 : AppSpacing.lg,
-                            ),
-                            child: Column(
-                              children: [
-                                _QuranPageCard(page: pages[i], showBasmala: i == 0),
-                                for (final mawdi in mawadiByPage[pages[i].pageNumber] ?? const [])
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                                    child: MawdiCard(mawdi: mawdi),
-                                  ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: pages.length,
+                    onPageChanged: (index) => setState(() => _currentPageIndex = index),
+                    itemBuilder: (context, i) {
+                      // كل صفحة بسكرول خاص فيها لحالها، حتى لو كان
+                      // فيها بطاقات "تبيان" إضافية تحت النص، تضل
+                      // كل المحتوى قابل للوصول بدون ما ينقص منه شي.
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          children: [
+                            _QuranPageCard(page: pages[i], showBasmala: i == 0),
+                            for (final mawdi in widget.mawadiByPage[pages[i].pageNumber] ?? const [])
+                              Padding(
+                                padding: const EdgeInsets.only(top: AppSpacing.md),
+                                child: MawdiCard(mawdi: mawdi),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
+                if (hasMultiplePages) _buildPageIndicator(context, pages.length),
                 _buildColorLegend(context),
               ],
             ),
+    );
+  }
+
+  /// شريط "صفحة X من Y" + نقاط تدل على موقع الصفحة الحالية بين
+  /// صفحات التسميع — يظهر بس لما يكون في أكتر من صفحة وحدة.
+  Widget _buildPageIndicator(BuildContext context, int pageCount) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < pageCount; i++)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: i == _currentPageIndex ? 18 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: i == _currentPageIndex ? scheme.primary : scheme.outlineVariant,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

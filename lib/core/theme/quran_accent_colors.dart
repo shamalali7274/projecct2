@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// أنواع تظليل الكلمة أثناء التسميع — نفس المفهوم التقليدي بالتعليم
-/// القرآني لتمييز أنواع الملاحظات (تجويد صحيح/خطأ/نسيان/ملاحظة عامة).
+/// القرآني لتمييز أنواع الملاحظات (تجويد/خطأ/نسيان/تشكيل).
 /// الألوان هنا تظليل دلالي فقط (Semantic) ولا تُغيّر هوية التطبيق —
 /// باقي صفحة القرآن تستخدم AppColors العادية بنفس روح المشروع.
 enum WordHighlightColor { none, green, red, blue, yellow }
@@ -28,13 +28,13 @@ extension WordHighlightColorX on WordHighlightColor {
       case WordHighlightColor.none:
         return 'بدون تظليل';
       case WordHighlightColor.green:
-        return 'تجويد صحيح';
+        return 'تجويد';
       case WordHighlightColor.red:
         return 'خطأ';
       case WordHighlightColor.blue:
         return 'نسيان / تلعثم';
       case WordHighlightColor.yellow:
-        return 'ملاحظة';
+        return 'تشكيل';
     }
   }
 }

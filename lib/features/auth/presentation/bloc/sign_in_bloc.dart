@@ -59,8 +59,8 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
       return 'رقم الطالبة يجب أن يتكون من 10 أرقام ويبدأ بـ 09';
     }
 
-    if (event.password.length < 6) {
-      return 'كلمة السر يجب ألا تقل عن 6 خانات';
+    if (event.password.length < 8) {
+      return 'كلمة السر يجب ألا تقل عن 8 خانات';
     }
 
     return null;

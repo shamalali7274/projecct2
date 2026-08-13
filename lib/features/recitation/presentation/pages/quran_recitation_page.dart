@@ -385,16 +385,24 @@ enum _LoadStatus { loading, noUpcomingSession, ready, error }
 
 class _QuranRecitationPageState extends State<QuranRecitationPage> {
   final RecitationRepository _repository = RecitationRepository();
+  final PageController _pageController = PageController();
 
   _LoadStatus _status = _LoadStatus.loading;
   String? _errorMessage;
   NextSessionResult? _result;
   bool _submitting = false;
+  int _currentPageIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _loadNextSession();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadNextSession() async {
@@ -404,7 +412,9 @@ class _QuranRecitationPageState extends State<QuranRecitationPage> {
       setState(() {
         _result = result;
         _status = _LoadStatus.ready;
+        _currentPageIndex = 0;
       });
+      if (_pageController.hasClients) _pageController.jumpToPage(0);
     } catch (e) {
       final message = e.toString();
       // next-session بيرجع 404 لما ما في تسميع قادم مجدول أصلاً —
@@ -566,17 +576,27 @@ class _QuranRecitationPageState extends State<QuranRecitationPage> {
           studentName: widget.studentName,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            for (int pageIndex = 0; pageIndex < result.pages.length; pageIndex++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                child: _buildPageCard(pageIndex, result.pages[pageIndex]),
-              ),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: result.pages.length,
+              onPageChanged: (index) => setState(() => _currentPageIndex = index),
+              itemBuilder: (context, pageIndex) {
+                // كل صفحة بسكرول خاص فيها لحالها — لو محتوى الصفحة
+                // (عدد الأسطر) أطول من المساحة المتاحة عالشاشة، ما
+                // بينقص منها شي، هي بس تصير قابلة للسكرول لحالها
+                // بدل ما نعتمد على سكرول واحد عام لكل الصفحات.
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: _buildPageCard(pageIndex, result.pages[pageIndex]),
+                );
+              },
+            ),
+          ),
+          if (result.pages.length > 1) _buildPageIndicator(result.pages.length),
+        ],
       ),
       bottomNavigationBar: AbsorbPointer(
         absorbing: _submitting,
@@ -588,6 +608,43 @@ class _QuranRecitationPageState extends State<QuranRecitationPage> {
             onCancelled: _handleCancelled,
           ),
         ),
+      ),
+    );
+  }
+
+  /// شريط "صفحة X من Y" + نقاط تدل على موقع الصفحة الحالية بين
+  /// صفحات التسميع — يظهر بس لما يكون في أكتر من صفحة وحدة، تحت
+  /// الـ PageView مباشرة وفوق شريط أزرار القبول/الرفض.
+  Widget _buildPageIndicator(int pageCount) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      color: scheme.surfaceContainerLow,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'صفحة ${_currentPageIndex + 1} من $pageCount',
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < pageCount; i++)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _currentPageIndex ? 18 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _currentPageIndex ? scheme.primary : scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

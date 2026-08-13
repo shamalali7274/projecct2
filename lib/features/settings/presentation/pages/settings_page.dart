@@ -51,6 +51,17 @@ class SettingsPage extends StatelessWidget {
     // بالضبط، سواء الحساب حساب معلّمة أو حساب طالبة، لأنو الباك ايند
     // نفسه واحد لكل الأدوار (يعتمد على التوكن الحالي بس).
     await context.read<AuthCubit>().logout();
+    if (!context.mounted) return;
+
+    // logout() لحاله بيغيّر الـ state لـ AuthUnauthenticated، وهاد
+    // كافي نظرياً حتى AuthGate (يلي هو home: بالـ MaterialApp) يرجع
+    // يبني OnboardingPage. بس المشكلة: صفحة الإعدادات هون مش هي
+    // AuthGate نفسها — هي متل أي صفحة تانية متل (Navigator.push)
+    // فوق AuthGate بنفس الـ Navigator، فإعادة بناء AuthGate عم تصير
+    // بواجهة مدفونة تحت كل الصفحات المفتوحة، وما حدا شايفها. لازم
+    // نمسح الـ stack كامل ونرجع لأول صفحة (AuthGate) حتى يظهر
+    // التغيير فعلياً عالشاشة.
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override

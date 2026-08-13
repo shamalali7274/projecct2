@@ -80,7 +80,10 @@ class AuthCubit extends Cubit<AuthState> {
     } finally {
       await SecureStorage.clearAll();
       ApiClient.instance.clearToken();
-      emit(const AuthUnauthenticated());
+      // fromLogout: true حتى AuthGate يعرف إنو هاد تسجيل خروج فعلي
+      // (مو "ما في جلسة من الأساس")، فيوديها مباشرة لشريحة تسجيل
+      // الدخول بدون ما يمرّرها على باقي شرائح الترحيب بالسلايدر.
+      emit(const AuthUnauthenticated(fromLogout: true));
     }
   }
 
